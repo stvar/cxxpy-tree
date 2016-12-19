@@ -1,0 +1,65 @@
+# Copyright (C) 2016  Stefan Vargyas
+# 
+# This file is part of C++Py-Tree.
+# 
+# C++Py-Tree is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# C++Py-Tree is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with C++Py-Tree.  If not, see <http://www.gnu.org/licenses/>.
+
+<Node>;
+<Literal> : Node @ <char*> [str];
+<ListElem> : Node @ <list_elem_idx_t> [index], <TreeNode>* [node];
+<NodeName> : Node @ <char*> [ident];
+<NodeList> : Node @ <NodeName>* [base], list<ListElem> [elems];
+<ArgName> : Node @ <char*> [str];
+<ArgValue> : Node;
+<NodeValue> : ArgValue @ <TreeNode>* [node];
+<ListValue> : ArgValue @ <NodeList>* [list];
+<LiteralValue> : ArgValue @ <Literal>* [literal];
+<NodeArg> : Node @ <ArgName>* [name], <ArgValue>* [value];
+<NodeArgs> : Node;
+<ListArgs> : NodeArgs @ list<NodeArg> [list];
+<LiteralArgs> : NodeArgs @ <Literal>* [literal];
+<TreeNode> : Node @ <NodeName>* [name], <NodeArgs>* [args];
+<Tree> : Node @ <TreeNode>* [root];
+
+<Tree> tree : tree_node
+            ;
+<TreeNode> tree_node
+            : node_name "(" node_args ")"
+            ;
+<NodeName> node_name
+            : IDENT
+            ;
+<NodeArgs> node_args
+            : node_arg *
+            | literal
+            ;
+<NodeArg> node_arg
+            : "." arg_name "=" arg_value
+            ;
+<ArgName> arg_name
+            : NAME
+            ;
+<ArgValue> arg_value
+            : tree_node
+            | "list" "<" node_name ">" "[" list_elem * "]"
+            | literal
+            ;
+<ListElem> list_elem
+            : "[" NUM "]" "=" tree_node
+            ;
+<Literal> literal
+            : STR
+            ;
+
+

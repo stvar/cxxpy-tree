@@ -1,0 +1,1199 @@
+Copyright (C) 2016  Stefan Vargyas
+
+This file is part of C++Py-Tree.
+
+C++Py-Tree is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+C++Py-Tree is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with C++Py-Tree.  If not, see <http://www.gnu.org/licenses/>.
+
+--------------------------------------------------------------------------------
+
+
+                                  C++Py-Tree
+                                  ==========
+
+                        Ştefan Vargyas, stvar@yahoo.com
+
+                                 Dec 18, 2016
+
+
+
+Table of Contents
+-----------------
+
+ 1. The C++Py-Tree Program
+ 2. The Initial Design of C++Py-Tree
+ 3. The C++Py Grammar Meta-Tool
+ 4. The Grammar and Tree AST of C++Py-Tree
+ 5. The Public Interface of Tree AST and Parser Classes
+ 6. The Implementation of Tree AST and Parser Classes
+ 7. The Memory Management of Tree AST and Parser Classes
+ 8. The Extension Functions of C++Py-Tree
+ 9. The Tree AST Type Libraries
+10. The Evaluation of Tree Expressions.
+    The Public Interface and Implementation of Eval Module
+11. Appendix
+
+
+1. The C++Py-Tree Program
+=========================
+
+Initially, C++Py-Tree was a subproject of a larger project -- C++Py, which is
+implementing an interpreter for a subset of Python language.
+
+The main vocation of C++Py-Tree program was that of providing means to the C++Py
+compiler to get its input directly from sourced AST tree expressions, instead
+of having to rely upon the C++Py parser to provide the AST objects needed. This
+way the C++Py parser and compiler are decoupled from each other: their testing
+proceed separately.
+
+Subsequently, C++Py-Tree evolved to gain a wider significance as it got used by
+other projects subsumed or just related to the father C++Py project. 
+
+(Note: at the time of making C++Py-Tree public, the C++Py project itself has
+already stalled its development for quite some time.)
+
+
+2. The Initial Design of C++Py-Tree
+===================================
+
+For the purpose of sourcing the AST objects of C++Py I designed and implemented
+a set of modules -- each of them compiled into a separate shared library -- and
+a program to use them. The main driving force behind the design of C++Py-Tree
+was the desire to decouple from each other the two tasks which are required to
+be accomplished when it comes to build from textual input the AST objects which
+are defined by a given set of AST type definitions:
+
+The first task is that of parsing and verifying the well-formedness of input
+text according to a predefined set of syntax rules of forming tree expressions.
+The second task is that of proper bottom-up creation of all the AST objects,
+from the simplest of the constituents of the tree representing the given input
+tree expression upward the root of the tree. Therefore, any set of AST type
+definitions is supposed to provide two things:
+
+  (a) the type constrains of objects making up each object composition, and
+  (b) the composition rules upon which objects are allowed to combine to form
+      valid tree expressions.
+
+The decoupling of textual input parsing from the process of creation of AST 
+objects is quite desirable because the parsing process is in fact independent
+of the evaluation process controlled by any given set of AST type definitions.
+
+Having taken into account all these requirements, I obtained an architecture of
+the modules of the C++ Tree program as follows:
+
+  * the tree module: it shall provide the AST tree expression infrastructure,
+    based upon the generic AST infrastructure the grammar meta-tool offers;
+
+  * the eval module: it shall enclose all the functionality of tree expression
+    evaluation common to every given set of AST type definitions -- i.e. usable
+    by each of the possible set of AST type definitions;
+
+  * specific AST type modules: each given set of AST type definitions shall be
+    enclosed statically into a special purpose module.
+
+The way these modules shall have to be combined into running program instances
+will resemble that of Unix component pipelining: that is that one should issue
+a sequence of commands starting with a call to the main tree program, specifying
+in the command line the type module which is to be used for validation of input
+tree expressions, than continuing with the command line options to be applied to
+the type module itself, and so on, if the type module itself was designed with
+support to own extension modules.
+
+Here is the list all the modules of C++Py-Tree (paths are relative to src/tree):
+
+  ------------------   ----------------   --------   --------------------------
+        module              binary        extends            depends on
+  ------------------   ----------------   --------   --------------------------
+  Tree Lib             tree.so            -          -
+  Tree Eval Lib        eval.so            -          tree.so
+  Tree Printer         printer.so         tree       tree.so
+  Abc AST Type Lib     abc/abc.so         tree       tree.so, eval.so
+  Abc AST Printer      abc/printer.so     abc.so     tree.so, eval.so, abc.so
+  C++Py AST Type Lib   cxxpy/cxxpy.so     tree       tree.so, eval.so
+  C++Py AST Printer    cxxpy/printer.so   cxxpy.so   tree.so, eval.so, cxxpy.so
+  Main Program         tree               -          tree.so
+  ------------------   ----------------   --------   --------------------------
+
+I had in mind the requirement to define the modules of C++Py-Tree such a way that
+they obey an important general rule of design: module dependencies should form an
+acyclic graph. The dependencies between modules were as shown above. Remark that
+the graph of dependencies is indeed acyclic.
+
+The AST printer extensions -- {abc,cxxpy}/printer.so shared libs --, are linked
+dynamically in run-time by their owners and they are printing on stdout the AST
+objects passed along from their caller.
+
+
+3. The C++Py Grammar Meta-Tool
+==============================
+
+Until now, all of the subprojects of the father C++Py project, starting with the
+C++Py project itself, required each, by their very initial design, specialized
+meta-tool support for defining specific abstract syntax trees and implementing
+them in C++, for parsing particular syntaxes -- one main instance of which is
+the C++Py language (a subset of Python language) --, for syntax-directed mapping
+of the parsed input to the encompassing ASTs and for C++-centric mechanisms for
+constructing the AST objects for a given input.
+
+To achieve these requirements I outlined a sort of extended grammar notation --
+called g++ -- and incrementally defined and developed a tool -- not included in
+the C++Py-Tree proper --, called the grammar meta-tool, or simply, the meta-tool,
+which is able to parse and process .g++ files and generate all the AST code and
+most of parsing code -- except for the parsing code itself.
+
+At the early stages of the development of C++Py father project and of other
+subprojects of it, there was no need at all to develop a fully fledged parser
+generator. Although the meta-tool got quite close to what an LL(1) parser
+generator would actually have to be (e.g. it computed the FIRST sets for the
+non-terminals of a given grammar), I choose to write the respective recursive
+descent parsers by hand, each obeying to a previously established frame of
+development. Computing only the FIRST sets and not bothering with FOLLOW sets
+was derived from one of the driving forces of the development C++Py-Tree: have
+an incremental and iterative path of development from simple yet non-trivial
+starting grounds (KISS principle).
+
+At a later stage, as things evolved and the grammars defined got more complex,
+I did implemented an almost fully fledged LL(1) parser generator, which is, as
+for now, generating recursive descent parsers in C++ and Python and, of much
+value, is providing helpful information at several levels of detail when comes
+to debug non-LL(1) grammars.
+
+The g++ grammar notation, besides the grammar itself, contains a set of
+annotations -- following a simple and effective syntax -- for describing AST
+classes. Please look at the content of src/tree/grammar.g++ : it is the grammar
+of C++Py-Tree along with the AST annotations in place.
+
+E.g., the Literal AST class has the defining line in src/tree/grammar.g++ as:
+
+  <Literal> : Node @ <char*> [str];
+
+This AST type definition will generate an AST class in src/tree/ast.hpp as:
+
+  class Literal : public Node
+  {
+  public:
+    Literal(const char* _str) : str(_str) {}
+    ...
+
+    const char* str;
+  };
+
+What is to be noticed looking at the AST class definitions in src/tree/ast.hpp
+is that each of them are in possession of two methods of signature:
+
+    result_t accept(Visitor0*) const,
+
+    void accept(Visitor*) const.
+
+These methods are implementing the well-known Visitor design-pattern, which will
+allow users of the AST of a C++Py-Tree script to extend each of the AST classes
+with as many as needed "virtual functions" (in fact the Visitor pattern is about
+a mechanism for adding "virtual functions" to a hierarchy of polymorphic classes
+without actually changing the definition of the classes themselves). The Visitor
+mechanism is actually used at full power, since the AST code will be encompassed
+into a shared lib -- implication: the AST hierarchy is closed to changes --, and
+different parts of the app will have to define and implement specific "virtual
+functions" for each class in the AST hierarchy.
+
+The first type of visitation is returning a value of type result_t (free to be
+defined by user). The second one is a type of visitation which does not provide
+a returning value.
+
+The syntax in src/tree/grammar.g++ of type:
+
+  <Literal> literal : STR ;
+
+aside from defining the grammar rule for the 'literal' non-terminal, is useful
+when the meta-tool comes to associate AST types to non-terminals. This AST type
+would be the type of the object returned by the corresponding parse function.
+In this case, the grammar meta-tool will generate a parse function stub like:
+
+  // <Literal> literal
+  //             : STR
+  //             ;
+  const AST::Literal* Parser::parse_literal()
+  {
+    not_yet_impl("parse_literal");
+    return 0;
+  }
+
+Upon src/tree/grammar.g++ file changes, the meta-tool is able to cleverly diff
+and update specific and all parts of the source files by the following means:
+
+On one hand, it uses .grammar-files and .grammar2-files files containing lists
+of files which need updating whenever the corresponding .g++ file changes. The
+source tree contains the following such files:
+
+  $ find -name .grammar\*-files -printf '%P\n'|sort
+  src/tree/.grammar-files
+  src/tree/abc/.grammar-files
+  src/tree/abc/.grammar2-files
+  src/tree/cxxpy/.grammar-files
+  src/tree/cxxpy/.grammar2-files
+
+For example, the content of the first of these files is:
+
+  $ cat src/tree/.grammar-files
+  ast.hpp
+  ast.cpp
+  parser.hpp
+  parser.cpp
+  printer.cpp
+  eval.cpp
+
+On the other hand, the grammar meta-tool updating of source files is realized by
+defining pairs of open/close grammar tags in the source files themselves. To get
+the list of such tags present in, say, src/tree/ast.hpp, one has to issue:
+
+  $ grep -E '^\s*//\s*[<>]' src/tree/ast.hpp
+  // > NODE_CLASSES_FORWARD $ grammar -NF
+  // < NODE_CLASSES_FORWARD
+  // > NODE_LIST_ARGS_DECL $ grammar -NLD
+  // < NODE_LIST_ARGS_DECL
+  // > AST_NODE_ENUM $ grammar -NE
+  // < AST_NODE_ENUM
+  ...
+
+It should be quite obvious that tagging is done by inserting pairs of comments
+of form:
+
+  '^\s*//\s*>\s*[A-Z0-9_]+\s*\$\s*<meta-tool-command>\s*$'
+
+and, respectively:
+
+  '^\s*//\s*<\s*[A-Z0-9_]+\s*$'.
+
+Upon all these, the grammar meta-tool is able to update all the dependents by
+a single call of it. What is to remark here is that the meta-tool provides a
+valuable diff'ing feature, by which one is able to actually inspect a diff of
+the old tagged-code and the new one -- which corresponds to the current changes
+applied to the input .g++ file -- for specified dependents or for all of them
+in just one call.
+
+The meta-tool consists of a pair of programs: one is a complex bash script (it
+consists of more than fifty different orthogonal options and more than a dozen
+of configuring options) generating and running pipelines of programs, including
+intricate PERLRE ssed scripts which do actually the job of extracting relevant
+information from the input .g++ file and updating dependent source files.
+
+The second is a C++ tool -- nota bene: developed incrementally using the
+meta-tool itself! --, which is able to parse .g++ files and to offer a set of
+extended functionalities: e.g. generates the C++ code implementing an AST type
+library.
+
+As paradoxical as it may seem, it's perfectly true that the C++ meta-tool
+implements a parser for .g++ files with AST and all the like provided by
+the meta-tool itself. Thus, indeed!, the meta-tool is a program of which
+development is based upon itself!
+
+As for the current version of the C++Py-Tree, the meta-tool was not used for its
+LL(1) parser generator services. The LL(1) parser generation functionality was
+not needed at all by the C++Py-Tree since the grammar defining the syntax of
+tree expressions the program accepts as input is very simple (see it defined
+in the next section).
+
+The first version of the parser generator has been written in Python language.
+I did obtained a design and an implementation which are closely resembling, at
+the structural level, what is to be its coming C++-based version. This initial
+requirement was not an obstacle put against using advanced idioms and patterns
+of Python programming, as one might be thinking at a first glance. Without
+sacrificing anything from using the full Python language -- e.g., none of its
+expressiveness was restricted or affected --, all the Python code obtained is
+easily translatable into efficient C++ code.
+
+
+4. The Grammar and Tree AST of C++Py-Tree
+=========================================
+
+The input of the C++Py-Tree program is specified by the extended grammar found
+in src/tree/grammar.g++. The syntax rules of the tree expressions are as shown
+below:
+
+  tree : tree_node ;
+  tree_node : node_name "(" node_args ")" ;
+  node_name : IDENT ;
+  node_args : node_arg * | literal ;
+  node_arg : "." arg_name "=" arg_value ;
+  arg_name : NAME ;
+  arg_value : tree_node | "list" "<" node_name ">" "[" list_elem * "]" | literal ;
+  list_elem : "[" NUM "]" "=" tree_node ;
+  literal : STR ;
+
+They are allowing to build arbitrary complex trees based on string literals, by
+aggregating them by type name or composing them into typed lists. Here is a list
+of a couple of such tree expressions, of which the last one, more elaborated, is
+spanning over several lines:
+
+  A()
+  A('x')
+  A(.a = 'x')
+  A(.a = B())
+  A(.a = list<B> [])
+  A(.a = 'x' .b = B() .c = list<C> [])
+
+  A(.a = 'x'
+    .b = B()
+    .c = list<C> [
+      [0] = D()
+      [1] = E()
+    ]
+  )
+
+The rules defining the AST types of the tree expressions are following closely
+the above syntax rules:
+
+  <Node>;
+  <Literal> :      Node @ <char*> [str];
+  <ListElem> :     Node @ <list_elem_idx_t> [index], <TreeNode>* [node];
+  <NodeName> :     Node @ <char*> [ident];
+  <NodeList> :     Node @ <NodeName>* [base], list<ListElem> [elems];
+  <ArgName> :      Node @ <char*> [str];
+  <ArgValue> :     Node;
+  <NodeValue> :    ArgValue @ <TreeNode>* [node];
+  <ListValue> :    ArgValue @ <NodeList>* [list];
+  <LiteralValue> : ArgValue @ <Literal>* [literal];
+  <NodeArg> :      Node @ <ArgName>* [name], <ArgValue>* [value];
+  <NodeArgs> :     Node;
+  <ListArgs> :     NodeArgs @ list<NodeArg> [list];
+  <LiteralArgs> :  NodeArgs @ <Literal>* [literal];
+  <TreeNode> :     Node @ <NodeName>* [name], <NodeArgs>* [args];
+  <Tree> :         Node @ <TreeNode>* [root];
+
+A representation of the AST of the input tree expressions can be obtained from
+the C++Py-Tree program by passing to it the command line option '-p'. Below can
+be found the textual representation of the AST of one of the tree expressions
+from above. Note that the textual representation obtained is in fact obeying the
+rules of making well-formed tree expressions.
+
+  $ cd src/tree
+
+  $ export LD_LIBRARY_PATH=.
+
+  $ ./tree -p "A(.a = 'x' .b = B() .c = list<C> [])" -- -i
+  Tree(
+  .   .root = TreeNode(
+  .   .   .name = NodeName('A')
+  .   .   .args = ListArgs(
+  .   .   .   .list = list<NodeArg> [
+  .   .   .   .   [0] = NodeArg(
+  .   .   .   .   .   .name = ArgName('a')
+  .   .   .   .   .   .value = LiteralValue(
+  .   .   .   .   .   .   .literal = Literal('x')
+  .   .   .   .   .   )
+  .   .   .   .   )
+  .   .   .   .   [1] = NodeArg(
+  .   .   .   .   .   .name = ArgName('b')
+  .   .   .   .   .   .value = NodeValue(
+  .   .   .   .   .   .   .node = TreeNode(
+  .   .   .   .   .   .   .   .name = NodeName('B')
+  .   .   .   .   .   .   .   .args = ListArgs(
+  .   .   .   .   .   .   .   .   .list = list<NodeArg> []
+  .   .   .   .   .   .   .   )
+  .   .   .   .   .   .   )
+  .   .   .   .   .   )
+  .   .   .   .   )
+  .   .   .   .   [2] = NodeArg(
+  .   .   .   .   .   .name = ArgName('c')
+  .   .   .   .   .   .value = ListValue(
+  .   .   .   .   .   .   .list = NodeList(
+  .   .   .   .   .   .   .   .base = NodeName('C')
+  .   .   .   .   .   .   .   .elems = list<ListElem> []
+  .   .   .   .   .   .   )
+  .   .   .   .   .   )
+  .   .   .   .   )
+  .   .   .   ]
+  .   .   )
+  .   )
+  )
+
+The indenting dots seen printed out above are due to the presence of '-i' option
+on the invoking command line. The main program is passing on this option and all
+others like it succeeding the double dash command line option, '--', to its
+dynamically loaded extension module -- in this case the Tree Printer module.
+See the Appendix section for other options usable on the invoking command line.
+
+
+5. The Public Interface of Tree AST and Parser Classes
+======================================================
+
+The C++Py-Tree program makes use of two very important classes when it comes to
+parse and transform input tree expressions into a further usable representation:
+the Tree AST and the Parser classes.
+
+Of course, the AST class main vocation is that of managing the AST associated
+to the tree expressions given on input. The Parser class, on its turn, do the
+actual process of parsing input and providing as result the associated AST in
+the form of an AST class instance.
+
+The public interface of AST class is quite simple -- except for, maybe, the list
+of new_* methods described a little further below (see src/tree/ast.hpp):
+
+  class AST : private BaseAST<Node>
+  {
+  public:
+    AST(bool _debug = false);
+    ~AST();
+
+    const Node* root_node() const;
+    void root_node(const Node*);
+    size_t num_node() const;
+    size_t num_treenode() const;
+
+    ... // new_* method declarations
+
+    typedef base_t::node_iterator node_iterator;
+
+    node_iterator node_begin() const;
+    node_iterator node_end() const;
+
+    class treenode_iterator;
+
+    treenode_iterator treenode_begin() const;
+    treenode_iterator treenode_end() const;
+
+  private:
+    ...
+  };
+
+Parser class public interface is even simpler (cf. src/tree/parser.hpp):
+
+  class Parser : private BaseParser
+  {
+  public:
+    Parser(
+      bool _debug,
+      bool _verbose_error,
+      input_type_t _input_type,
+      const char* _input_name,
+      const char* _input);
+
+    std::unique_ptr<AST::AST> parse();
+
+  private:
+    ...
+  };
+
+where input_type_t is defined in src/grammar/parser-base.hpp as:
+
+  enum input_type_t { text_input, file_input }
+
+When called for parse() method, the parser starts parsing input and building the
+associated AST. The result of this process is then made available to the user as
+a return value of the call. For a relevant use case of AST and Parser classes
+please refer to the main() function in src/tree/tree.cpp -- where is to be found
+something like:
+
+  auto opts = options_t::options(argc, argv);
+  if (opts->help_ext_func || opts->argc == 0) {
+    if (auto r = run_ext_func<TreeAST::AST>(nullptr, opts))
+      return r;
+  }
+  else {
+    auto ptr = opts->argv;
+    auto end = ptr + opts->argc;
+    for (; ptr < end; ptr ++) {
+      auto ast = parse_input(*ptr, opts);
+      if (auto r = run_ext_func(ast, opts))
+        return r;
+    }
+  }
+
+The parse_input() function creates a Parser instance, invokes its parse()
+method and passes out the result obtained from it:
+
+  static inline std::unique_ptr<TreeAST::AST> parse_input(
+    const char* input, const options_t* opts)
+  {
+    static const Parser::Parser::input_type_t input_types[] = {
+      Parser::Parser::text_input, // options_t::input_type_t::text_input
+      Parser::Parser::file_input  // options_t::input_type_t::file_input
+    };
+    Parser::Parser parser(
+      opts->debug,
+      opts->verbose,
+      Ext::array(input_types)[opts->input_type],
+      opts->input_type == options_t::text_input
+      ? "<text>" : input,
+      input);
+    return parser.parse();
+  }
+
+Notice that the Parser instance is independent of the AST instance it provided
+via its parse() method: upon the return from parse_input() function the Parser
+instance gets destroyed, yet the AST instance can be and is used further on.
+
+
+6. The Implementation of Tree AST and Parser Classes
+====================================================
+
+If one had already been looking at the AST and Parser class declarations, he
+would certainly have noticed that each of them is owning a great deal of their
+respective implementations to third-party classes -- namely to BaseAST<Node>,
+and respectively, BaseParser classes.
+
+This state of affairs came out of the process of evolving the meta-tool. I
+mentioned that the meta-tool itself is using the same AST infrastructure when
+it comes to parse .g++ files. Thus the appearance of classes like BaseAST and
+BaseParser: they are factoring out the common functionality needed by several
+parsers and AST factories existing in the C++Py father project.
+
+Of importance is to remark that the code uses quite heavily the C++ templates
+mechanism, and this is especially true for the powerful mechanism of (partial)
+template specialization. One such case would be that of the struct template
+NodeCast, defined in src/tree/ast.hpp as:
+
+  template<typename T> struct NodeCast;
+
+and specialized for each AST Node class, as for, e.g., Literal class:
+
+  template<> struct NodeCast<Literal>
+  {
+    static const AST::node_t::type_t type = AST::node_t::Literal;
+  };
+
+NodeCast allows to map at compile-time each AST Node class to the enum-typed id
+of that class (which is also defined in src/tree/ast.hpp as AST::node_t::type_t).
+This is of use when it comes to safely regain a pointer to a specified AST Node
+class from a pointer of type AST Node:
+
+  template<typename T>
+  const T* node_cast(const Node* node)
+  {
+    return node && node->type() == NodeCast<T>::type
+      ? static_cast<const T*>(node) : 0;
+  }
+
+A relevant use-case of node_cast() is to be found in file src/tree/eval.cpp in
+function TypeCheck<T>::check_node_args().
+
+
+7. The Memory Management of Tree AST and Parser Classes
+=======================================================
+
+The AST class -- which is enclosing all the functionality of creating AST Node
+classes -- contains a set of new_* methods, one for each AST Node type. Here is
+a list a couple of them extracted from src/tree/ast.hpp:
+
+  const Literal* new_literal(const char* str);
+  const ListElem* new_listelem(const list_elem_idx_t index, const TreeNode* node);
+  const NodeName* new_nodename(const char* ident);
+
+having the implementation defined in src/tree/ast.cpp:
+
+  const Literal* AST::new_literal(const char* str)
+  {
+    return new_node<Literal>(alloc_arg(str));
+  }
+
+  const ListElem* AST::new_listelem(const list_elem_idx_t index, const TreeNode* node)
+  {
+    return new_node<ListElem>(alloc_arg(index), alloc_arg(node));
+  }
+
+  const NodeName* AST::new_nodename(const char* ident)
+  {
+    return new_node<NodeName>(alloc_arg(ident));
+  }
+
+First thing to notice is that all the code of the above kind is generated by the
+grammar meta-tool. In fact, the meta-tool is able to manage any sort of changes
+applied to the AST definitions in the g++ file, while keeping the respective
+code properly updated.
+
+Due to the fact that I have to deal with proper memory management of AST Node
+classes, I decided to have the AST class own all AST Node instances. Therefore
+the purpose of having new_* functions is that of providing means for the user to
+create them -- the AST Nodes -- as needed, while protecting him of worries with
+regards on how to properly manage their life time. For very relevant use cases
+of these new_* functions please look in the implementations of Parser::parse_*
+functions, in src/tree/parser.cpp: there is to be found a whole lot of calls
+like: ast->new_*(...).
+
+The memory management of AST Node classes in the AST class is done obeying to
+again KISS principle. Thus, I implemented a simple pool allocator class (see the
+declaration and definition of it in src/grammar/ast-base.hpp and, respectively,
+in src/grammar/ast-base.cpp). I made use of it twice in the AST class -- the
+members node_alloc and raw_alloc, one instance allocating AST Node instances,
+and the other allocating raw memory needed, e.g., for string literals or for
+node lists (see src/grammar/ast-base-impl.hpp).
+
+The alloc_arg() function used by the new_* functions of the AST class is in fact
+a function template parametrized by the type of its sole argument. It is defined
+through the static function alloc() of the class template 'Arg'. Specialized
+implementations are provided in src/tree/ast-base-impl.hpp and src/tree/ast.cpp
+files. Its definitions for 'list_elem_idx_t' and for AST Node types are trivial
+nops. More elaborate behavior is required for 'const char*' and for lists of AST
+objects since in these cases memory management has to intervene.
+
+For the memory management of the Parser class -- declared in src/tree/parser.hpp
+and defined in src/tree/parser.cpp -- and the BaseParser class -- declared in
+src/grammar/parser-base.hpp and defined in src/grammar/parser-base.cpp -- is not
+much to be said, except that the RAII idiom was constantly used when allocating
+memory resources.
+
+
+8. The Extension Functions of C++Py-Tree
+========================================
+
+The section 2 above shows that C++Py-Tree is functioning through an extension
+mechanism by which the so called extension functions compiled into shared libs
+are called upon to provide specific behavior on a Tree AST object representing
+the parsed input. C++Py-Tree comes along with three extension modules (the paths
+below are relative to src/tree):
+
+  module               binary
+  ------------------   --------------
+  Tree Printer         printer.so
+  Abc AST Type Lib     abc/abc.so
+  C++Py AST Type Lib   cxxpy/cxxpy.so
+
+In the main() function of C++Py-Tree program there are two calls to the function
+Sys::run_ext_func() (see src/tree/tree.cpp). These calls do have the following
+meaning: run the extension function specified in the command line that invoked
+the program, passing to it the Tree AST object representing the given input. The
+extension functions are functions with the same signature as, e.g., the print()
+function defined by the Tree Printer module in the src/tree/printer.cpp:
+
+  Sys::ext_func_result_t print(const TreeAST::AST*, const Tree::options_t*);
+
+Note that the command line options applicable to a given extension function must
+be placed in the invoking command line of C++Py-Tree program after the double
+dash option, '--'. These command line options are passed along to the extension
+function through its second argument -- an instance of the class Tree::options_t
+(defined and implemented in src/tree/tree.{hpp,cpp}) -- as the members:
+
+  size_t       ext_argc;
+  char *const *ext_argv;
+
+These are members of the Opts::options_t class -- the Tree::options_t class is
+derived from it. Look into the files include/options.hpp and src/options.cpp for
+details.
+
+The Tree Printer extension module provides three more extension functions:
+
+  Sys::ext_func_result_t dump(const TreeAST::AST*, const Tree::options_t*);
+  Sys::ext_func_result_t pretty_print(const TreeAST::AST*, const Tree::options_t*);
+  Sys::ext_func_result_t terse_print(const TreeAST::AST*, const Tree::options_t*);
+
+Each of the above four extension functions is printing on output a certain kind
+of representation of the Tree AST object passed along to it, it has attached two
+command line options and it is using a specific printer class derived from the
+BasicPrinter class (see src/tree/printer.cpp), all these as shown below:
+
+  function       options             class
+  ------------   -----------------   -------------
+  print          -p|--print          Printer
+  dump           -u|--dump           Dumper
+  pretty_print   -P|--pretty-print   SourcePrinter
+  terse_print    -T|--terse-print    SourcePrinter
+
+The printer classes are instances of the visitor pattern: the input Tree AST is
+traversed recursively for producing on output the respective representation of
+the AST. The implementation of each of visitor dispatch methods the Printer and
+Dumper classes define are fully controlled by the grammar meta-tool. These two
+kinds of printer classes are to be found in use by all of the subprojects of
+the father C++Py project that are defining own ASTs. The implementation of each
+of the visitor dispatch methods of the SourcePrinter class is hand-written, the
+meta-tool generating for them only empty stubs. The class produces two types of
+output, depending on the 'pretty' parameter passed to its constructor: when is
+'true', the class produces an output which is identical with the input modulo
+some indenting whitespace chars -- thus making the output to look "pretty" and
+more readable. When 'pretty' is false, the SourcePrinter class is producing a
+terse output: it eliminates altogether the printing of indenting whitespaces,
+thus resulting a single-line tree expression.
+
+Two more extension functions are found in the Abc and respectively the C++Py AST
+Type Libs -- compiled respectively in the shared libs src/tree/abc/abc.so and
+src/tree/cxxpy/cxxpy.so:
+
+  Sys::ext_func_result_t abc(const TreeAST::AST*, const Tree::options_t*);
+  Sys::ext_func_result_t cxxpy(const TreeAST::AST*, const Tree::options_t*);
+
+The two extensions functions are governed by the '-F' command line option: for
+invoking the respective functions a '-F' option with a proper argument of form
+'-F abc/abc.so' or, by case, '-F cxxpy/cxxpy.so' must be placed in the command
+line.
+
+
+9. The Tree AST Type Libraries
+==============================
+
+The Tree AST type libraries are modules encompassing statically a certain set of
+AST type definitions, in accordance with a g++ source file.
+
+The AST type libraries are structurally identical, the differences occurring only
+with regards to the way the grammar meta-tool lays down the C++ data structures
+and the C++ implementation code for a particular set of AST type definitions.
+Please recall from section 2, that the grammar meta-tool is responsible for the
+generation of all such C++ code, according to the set of AST type definitions it
+is receiving as input in a g++ file.
+
+Previously were introduced the two AST type libs the source tree contains: namely
+the Abc and the C++Py AST type libs. Each of these libs is hosted by a separate
+directory of the source tree: src/tree/abc and, respectively, src/tree/cxxpy.
+These two directories are structurally identical, the same way the corresponding
+AST type libs are.
+
+The Abc AST type library is enclosing a set of AST type definitions made up for
+testing purposes. The C++Py AST type library is enclosing the set AST type
+definitions used by the father C++Py project itself.
+
+As already mentioned, the AST type libs are functioning as extensions modules of
+-- i.e. as plugins into -- the C++Py-Tree program. There are three main modes of
+operation of an AST type library, each corresponding to the command line options
+shown below (the Appendix section below presents brief information about the rest
+of the command line options available):
+
+   mode of operation   command line option
+   -----------------   -------------------
+   type check          -c|--type-check
+   build AST object    -A|--ast-build
+                       -o|--print-obj
+   print type defs     -t|--print-types
+
+The first is that of type checking the tree expression it receives through its
+entry point as a Tree AST object: verify whether the tree expression given as a
+Tree AST object is valid, i.e whether it satisfies the constraints imposed by
+the AST type definitions of the encompassing AST type library.
+
+The second mode of operation of an AST type library is that of constructing an
+instance of an AST object corresponding to the expression given in the form of
+a Tree AST object. After the AST object was built, it can be passed further to
+extension functions of the AST type library itself. The source tree contains
+only one such extensions function for each of its two AST type libraries: that
+is a 'print' extension function, which is compiled into a 'printer.so' shared
+lib and is implemented by an own printer.cpp source file. The printing code of
+each AST type library is controlled completely by the grammar meta-tool, exactly
+as in the case of the Tree AST printing code itself.
+
+The last of the modes of operation of an AST type library differs from the prior
+two ones: it does not apply to a tree expression passed as a Tree AST instance
+to the library's own entry point -- it only produces on standard output the AST
+type definitions of the encompassing AST type library. The AST type definitions
+produced are obeying to the syntax of AST type definitions of the g++ grammar
+notation.
+
+
+10. The Evaluation of Tree Expressions.
+=======================================
+    The Public Interface and Implementation of Eval Module
+    ======================================================
+
+The infrastructure of tree expression evaluation -- as noted in section 2 -- is
+used by each and every specific AST type library when they proceed to check for
+the validity or to build the AST object of any given tree expression. These two
+types of semantic actions applied to a Tree AST object representing a given tree
+expression is usually referred to as 'evaluations' of the respective expression.
+Clearly, each of them corresponds to a specific mode of operation of an AST type
+library: one is the 'type check' and the other is the 'build AST object' mode of
+operation (they were described in the previous section).
+
+The tree evaluation infrastructure common to all AST type libraries -- equally:
+common to every given set of AST type definitions -- is enclosed in the eval.so
+shared lib and implemented by the source files src/tree/eval.[hc]pp.
+
+The common use case of the 'eval' module is found in each entry point of an AST
+type library. For example, when looking at the implementation of the entry point
+of an AST type library in src/tree/eval-impl.hpp, the function 'ext_func_entry',
+one would remark that the two kinds of tree expression evaluations are invoked
+by one of the following functions: exec<TypeMaker>() or exec<NodeMaker>():
+
+  template<>
+  inline int exec<Obj::TypeMaker>(
+    const TreeAST::Tree* tree, const options_t* opt)
+  {
+    TypeMaker maker(type_cast_info(opt));
+    auto obj = eval<obj_type_t>(tree, &maker, eval_opts(opt));
+    std::cout << print(obj, print_info(opt)) << std::endl;
+    return 0;
+  }
+
+  template<>
+  inline int exec<Obj::NodeMaker>(
+    const TreeAST::Tree* tree, const options_t* opt)
+  {
+    using AST::AST;
+    AST ast(opt->debug);
+    NodeMaker maker(&ast, type_cast_info(opt));
+    auto obj = eval<obj_value_t>(tree, &maker, eval_opts(opt));
+    std::cout << print(obj, print_info(opt)) << std::endl;
+    return 0;
+  }
+
+The code is straightforward: instantiate a 'maker' class -- either the TypeMaker
+class or the NodeMaker class --, than proceed the 'evaluation' of the given Tree
+AST by calling the Obj::eval function and finally print out the result obtained.
+The Obj::eval function is defined in src/tree/eval.hpp as:
+
+  template<typename T, typename V>
+  T eval(const TreeAST::Tree* tree, ObjMaker<V>* maker, const eval_opts_t& opt)
+  {
+    extern V eval(const TreeAST::Tree* tree, ObjMaker<V>* maker, const eval_opts_t& opt);
+    return static_cast<T>(eval(tree, maker, opt));
+  }
+
+A call to this lightweight wrapper function enters the eval.so shared lib at one
+of the two top-level 'eval' functions in src/tree/eval.cpp:
+
+  obj_type_t eval(
+    const AST::Tree* tree, Obj::ObjMaker<obj_type_t>* maker, const eval_opts_t& opt)
+  {
+    return Obj::Evaluator<obj_type_t>(maker, opt).eval(tree);
+  }
+
+  obj_value_t eval(
+    const AST::Tree* tree, Obj::ObjMaker<obj_value_t>* maker, const eval_opts_t& opt)
+  {
+    return Obj::Evaluator<obj_value_t>(maker, opt).eval(tree);
+  }
+
+By now the core of 'eval' module has already been reached, since coming upon the
+main class responsible for the evaluation of input tree expressions: that is the
+class template Obj::Evaluator. Simply put the Obj::Evaluator<> class is a stack
+evaluator of *type-constrained fully-parenthesized expressions*. It is enclosed
+completely into the eval.so shared lib, where two classes are instantiated from
+it: the Obj::Evaluator<obj_type_t> and Obj::Evaluator<obj_value_t> classes.
+
+The template parameter of the Obj::Evaluator class is specifying the type of the
+objects the tree expression evaluation process is handling. Thus, it is the type
+of objects of which the evaluation stack is comprised of and, consequently, the
+type of the object which results upon the evaluation process. The implementation
+defines two such types (see src/tree/eval.hpp): obj_type_t and obj_value_t. They
+are structs, the second extends the first, and each belong to the Obj namespace.
+The obj_type_t struct is used in the case of type checking of tree expressions,
+and the obj_value_t struct in the case of building AST objects out of input tree
+expressions.
+
+When the above eval() functions instantiate their specific Obj::Evaluator class,
+they pass to the instance an important object: that is the 'maker' object. It is
+an instance of the Obj::ObjMaker<> class received as input and is the abstract
+factory of objects manipulated by the evaluator object throughout the evaluation
+process. The Obj::ObjMaker<> class represents an instance of the well-known
+factory method design pattern: it is an abstract class template as shown below:
+
+  template<typename T>
+  struct ObjMaker
+  {
+    typedef T val_t;
+    typedef Obj::obj_t<val_t> obj_t;
+    typedef Obj::obj_stack_t<val_t> obj_stack_t;
+
+    virtual ~ObjMaker() {}
+
+    virtual val_t make_node(const TreeAST::TreeNode* node, obj_stack_t& args) = 0;
+    virtual val_t make_list(const TreeAST::NodeList* list, obj_stack_t& args) = 0;
+    virtual val_t make_cptr(const TreeAST::Literal* cptr) = 0;
+  };
+
+The class template impose three types of factory functions, each constructing
+'values' of an explicit type. One would recognize the three types of objects
+the input tree expressions are comprised of:
+
+  factory function   expression objects
+  ----------------   ------------------
+     make_node       tree node
+     make_list       list of tree nodes
+     make_cptr       string literal
+
+An implementation of Obj::ObjMaker<> template is found in src/tree/eval.hpp as:
+
+  template<typename M, typename T>
+  class BasicMaker :
+    public ObjMaker<T>,
+    protected TypeCheck<T>
+  {
+  protected:
+    typedef M self_t;
+    typedef ObjMaker<T> base_t;
+    typedef typename base_t::val_t val_t;
+    typedef typename base_t::obj_t obj_t;
+    typedef typename base_t::obj_stack_t obj_stack_t;
+    typedef TypeCheck<T> type_check_t;
+
+    BasicMaker(const type_cast_info_t& _info) :
+      type_check_t(_info)
+    {}
+
+    val_t make_node(const TreeAST::TreeNode* node, obj_stack_t& args);
+    val_t make_list(const TreeAST::NodeList* list, obj_stack_t& args);
+    val_t make_cptr(const TreeAST::Literal* cptr);
+
+    ...
+  };
+
+and also inline implementations for all its methods. The TypeMaker and NodeMaker
+class definitions are as follows (see src/tree/eval-impl.hpp):
+
+  class TypeMaker :
+    public BasicMaker<TypeMaker, obj_type_t>
+  {
+  public:
+    typedef BasicMaker<TypeMaker, obj_type_t> base_t;
+    TypeMaker(const type_cast_info_t& _info) :
+      base_t(_info)
+    {}
+
+  private:
+    friend class BasicMaker<TypeMaker, obj_type_t>;
+    ...
+  };
+
+  class NodeMaker :
+    public BasicMaker<NodeMaker, obj_value_t>
+  {
+  public:
+    typedef BasicMaker<NodeMaker, obj_value_t> base_t;
+    NodeMaker(AST::AST* _ast, const type_cast_info_t& _info) :
+      base_t(_info),
+      ast(_ast)
+    {}
+
+  private:
+    friend class BasicMaker<NodeMaker, obj_value_t>;
+    ...
+  };
+
+The way the concrete classes and the class template instances are laid down --
+i.e. enclosed -- in shared libs is as shown below:
+
+  eval.so                             defines
+  ----------------------------------  ------------------------------------------
+  TypeCheck<obj_type_t>               everything but the dependents of AST nodes
+  TypeCheck<obj_value_t>              everything but the dependents of AST nodes
+
+  an AST Type Library .so file        defines
+  ----------------------------------  ------------------------------------------
+  TypeCheck<obj_type_t>               only the (inline) dependents of AST nodes
+  TypeCheck<obj_value_t>              only the (inline) dependents of AST nodes
+  BasicMaker<TypeMaker, obj_type_t>   entirely
+  BasicMaker<NodeMaker, obj_value_t>  entirely
+  TypeMaker                           entirely
+  NodeMaker                           entirely
+
+One perceptive reader should already have been noticing in the class definitions
+above an instance of the so called 'Curiously Recurring Template Pattern'.
+
+The implementation code of the TypeMaker and NodeMaker classes are partly due to
+the grammar meta-tool functionality of generating proper C++ code. The meta-tool
+is generating also the code for instantiating proper Obj::ast_type_t structures.
+The Obj::ast_type_t instances are representations of the AST type definitions
+from the g++ source file in C++ language. The definition of the Obj::ast_type_t
+struct follows unequivocally from that of the AST type definitions themselves.
+
+Note that based on the set of Obj::ast_type_t instances it is containing, an AST
+type library is able to produce the AST type definitions in their initial format
+found in the g++ source file. Recall from the previous section that this type of
+output an AST type library is producing constitutes the so called 'print type
+defs' mode of operation, which is invoked in file src/tree/eval-impl.hpp by the
+'ext_func_entry' entry point function through a call like:
+
+   ast_type_t::print_types(std::cout);
+
+The static method print_types of the Obj::ast_type_t class is solely responsible
+for printing on the given output stream the whole set AST type definitions.
+
+Note also that the implementation code of the Obj::ast_type_t struct is enclosed
+in the eval.so shared lib. The declarations and the implementation are found in
+src/tree/eval.hpp and, respectively, in src/tree/eval.cpp.
+
+
+11. Appendix
+============
+
+Below is to be find brief usage information about C++Py-Tree program, about its
+Tree Printer extension module and about its AST type library extension functions
+which were repeatedly evoked in previous sections.
+
+The input for the C++Py-Tree program consists of tree expressions passed to it
+as command line arguments or, otherwise, contained in text files of which names
+are passed to the program as command line arguments. The command line options
+are listed below:
+
+  $ cd src/tree
+
+  $ export LD_LIBRARY_PATH=.
+
+  $ ./tree --help
+  usage: tree (action|option)* (input)*
+  where the actions are:
+    -n|--none            no special action -- just parse input
+    -p|--print           print the AST of the parsed input
+    -u|--dump            dump the AST of the parsed input
+    -P|--pretty-print    reprint prettily the parsed input (default)
+    -T|--terse-print     reprint tersely the parsed input
+    -F|--ext-function <module-name>[::<func-name>]
+                         load given module and run specified func -- 
+                           when function name was not given take it as
+                           being the base name of the module name
+  the options are:
+    -f|--file            input type: file
+    -t|--text            input type: text (default)
+    -d|--debug           print some debugging output
+    -D|--no-debug        do not print debugging output (default)
+       --debug-ext-func  pass '--debug' to inner extension function
+       --help-ext-func   pass '--help' to inner extension function
+       --dump-options    print options and exit
+       --verbose         be verbose
+    -v|--version         print version numbers and exit
+    -?|--help            display this help info and exit
+
+The Tree Printer extension module has the following command line options:
+
+  $ ./tree -F printer.so --help-ext
+  usage: tree (action|option)* (input)*
+  where the actions are:
+    -p|--print-ast       print the given AST (default)
+    -u|--dump-ast        dump the given AST
+    -P|--pretty-ast      print prettily the given AST
+    -T|--terse-ast       print tersely the given AST
+    -F|--ext-function <module-name>[::<func-name>]
+                         load given module and run specified func -- 
+                           when function name was not given take it as
+                           being the base name of the module name
+  the options are:
+    -i|--indent-dots     print or not indenting dots (default not)
+    -I|--no-indent-dots
+    -d|--debug           print some debugging output
+    -D|--no-debug        do not print debugging output (default)
+       --debug-ext-func  pass '--debug' to inner extension function
+       --help-ext-func   pass '--help' to inner extension function
+       --dump-options    print options and exit
+       --verbose         be verbose
+    -v|--version         print version numbers and exit
+    -?|--help            display this help info and exit
+
+The AST type library extension expects the following command line arguments and
+produces output according to the action invoked:
+
+  $ ./tree -F abc/abc.so --help-ext
+  usage: tree (action|option)* (input)*
+  where the actions are:
+    -c|--type-check      type check given input (default)
+    -A|--ast-build       build the AST object of given input
+    -t|--print-types     output the AST type definitions of given module
+    -o|--print-obj       build and print the AST object of given input
+    -F|--ext-function <module-name>[::<func-name>]
+                         load given module and run specified func -- 
+                           when function name was not given take it as
+                           being the base name of the module name
+  the options are:
+    -r|--relaxed-casts   when evaluating AST objects make polymorphic type casts
+    -s|--strict-casts    when evaluating AST objects make exact type casts (default)
+    -T|--trace-eval      trace or not the tree evaluation algorithm (default not)
+       --no-trace-eval
+    -d|--debug           print some debugging output
+    -D|--no-debug        do not print debugging output (default)
+       --debug-ext-func  pass '--debug' to inner extension function
+       --help-ext-func   pass '--help' to inner extension function
+       --dump-options    print options and exit
+       --verbose         be verbose
+    -v|--version         print version numbers and exit
+    -?|--help            display this help info and exit
+
+The command line options to be passed to a given extension module of C++Py-Tree
+program must be preceded by the double dash, '--', command line option.
+
+At times may be useful to pass '--dump-options' command line option to C++Py-Tree
+program, to the Tree Printer extension module or to the AST type libraries:
+the option tells them to show the way the given command line options were
+interpreted:
+
+  $ ./tree -p --dump-options
+  home-dir:       .
+  action:         print
+  ext-func-name:  printer::print
+  input-type:     text
+  debug:          no
+  debug-ext-func: no
+  help-ext-func:  no
+  verbose:        no
+  argc:           0
+  ext-argc:       0
+
+  $ ./tree -F printer.so -- --dump-options
+  home-dir:       .
+  action:         print-ast
+  ext-func-name:  -
+  indent-dots:    no
+  debug:          no
+  debug-ext-func: no
+  help-ext-func:  no
+  verbose:        no
+  argc:           0
+  ext-argc:       0
+
+  $ ./tree -F abc/abc.so -- --dump-options
+  home-dir:       abc
+  action:         type-check
+  ext-func-name:  -
+  casts-type:     strict-casts
+  trace-eval:     no
+  debug:          no
+  debug-ext-func: no
+  help-ext-func:  no
+  verbose:        no
+  argc:           0
+  ext-argc:       0
+
+The content of this file has been revised as follows:
+
+  ------------------------------------------------------------------------------
+
+  * 2010-03-21  initial version relative to the C++Py Tree Demo source code tree
+                of c++py-tree-demo-Nov-23-2009.tar.bz2
+
+  ------------------------------------------------------------------------------
+
+  * 2011-02-28  very small revision to accommodate the changes in the source tree
+                of c++py-tree-demo-Nov-23-2009-revision-Feb-25-2011.tar.bz2:
+
+                - the text of the kind 'new (alloc_node<T>()) T(...)' from above
+                  became 'new_node<T>(...)'
+
+  ------------------------------------------------------------------------------
+
+  * 2012-04-09  small revision to accommodate the changes in the source tree
+                of c++py-tree-demo-Nov-23-2009-revision-Apr-09-2012.tar.bz2: a
+                few functions changed signature: instead of getting on input a
+                'TreeAST::AST*' argument they expect now a 'TreeAST::Tree*'.
+                The names of these functions are listed below:
+
+                  function                                source in src/tree/
+                  --------------------------------------  -------------------
+                  exec<Obj::TypeMaker>                    eval-impl.hpp
+                  exec<Obj::NodeMaker>                    eval-impl.hpp
+                  template eval<T,V>                      eval.hpp
+                  eval(..., ObjMaker<obj_type_t>*, ...)   eval.cpp
+                  eval(..., ObjMaker<obj_value_t>*, ...)  eval.cpp
+
+  ------------------------------------------------------------------------------
+
+  * 2014-11-27  moderate revision to accommodate the changes in the source tree
+                of c++py-tree-demo-Nov-27-2014.tar.bz2; a significant amount of
+                phrasing reformulations, corrections and additions
+
+  ------------------------------------------------------------------------------
+
+  * 2014-12-03  small revision to accommodate the changes in the source tree of
+                c++py-tree-demo-Dec-03-2014.tar.bz2 (the C++11 version of the
+                demo)
+
+  ------------------------------------------------------------------------------
+
+  * 2016-12-18  moderate revision to accommodate the text prior to making C++Py
+                Tree public (for example, removed all occurrences of the 'demo'
+                adjective).
+
+  ------------------------------------------------------------------------------
+
+

@@ -1,0 +1,1118 @@
+# Copyright (C) 2016  Stefan Vargyas
+# 
+# This file is part of C++Py-Tree.
+# 
+# C++Py-Tree is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# C++Py-Tree is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with C++Py-Tree.  If not, see <http://www.gnu.org/licenses/>.
+
+#
+# c++py tree test suite:
+#
+
+$ . ~/regtest2.sh
+$ alias regtest='regtest2-selftest -f test.txt -B'
+
+# output all test names:
+$ regtest -N
+prereq
+help
+options
+limits
+parse
+tree
+print
+cxxpy
+abc
+
+# run all tests:
+$ regtest -A
+
+--[ prereq ]-------------------------------------------------------------------
+
+$ cd ../src/tree
+$ export LD_LIBRARY_PATH=.:abc:cxxpy
+$
+
+--[ help ]---------------------------------------------------------------------
+
+$ ./tree --help
+usage: tree (action|option)* (input)*
+where the actions are:
+  -n|--none            no special action -- just parse input
+  -p|--print           print the AST of the parsed input
+  -u|--dump            dump the AST of the parsed input
+  -P|--pretty-print    reprint prettily the parsed input (default)
+  -T|--terse-print     reprint tersely the parsed input
+  -F|--ext-function <module-name>[::<func-name>]
+                       load given module and run specified func -- 
+                         when function name was not given take it as
+                         being the base name of the module name
+the options are:
+  -f|--file            input type: file
+  -t|--text            input type: text (default)
+  -d|--debug           print some debugging output
+  -D|--no-debug        do not print debugging output (default)
+     --debug-ext-func  pass '--debug' to inner extension function
+     --help-ext-func   pass '--help' to inner extension function
+     --dump-options    print options and exit
+     --verbose         be verbose
+  -v|--version         print version numbers and exit
+  -?|--help            display this help info and exit
+$ ./tree -F printer.so --help-ext
+usage: tree (action|option)* (input)*
+where the actions are:
+  -p|--print-ast       print the given AST (default)
+  -u|--dump-ast        dump the given AST
+  -P|--pretty-ast      print prettily the given AST
+  -T|--terse-ast       print tersely the given AST
+  -F|--ext-function <module-name>[::<func-name>]
+                       load given module and run specified func -- 
+                         when function name was not given take it as
+                         being the base name of the module name
+the options are:
+  -i|--indent-dots     print or not indenting dots (default not)
+  -I|--no-indent-dots
+  -d|--debug           print some debugging output
+  -D|--no-debug        do not print debugging output (default)
+     --debug-ext-func  pass '--debug' to inner extension function
+     --help-ext-func   pass '--help' to inner extension function
+     --dump-options    print options and exit
+     --verbose         be verbose
+  -v|--version         print version numbers and exit
+  -?|--help            display this help info and exit
+$ ./tree -F cxxpy/cxxpy.so --help-ext
+usage: tree (action|option)* (input)*
+where the actions are:
+  -c|--type-check      type check given input (default)
+  -A|--ast-build       build the AST object of given input
+  -t|--print-types     output the AST type definitions of given module
+  -o|--print-obj       build and print the AST object of given input
+  -F|--ext-function <module-name>[::<func-name>]
+                       load given module and run specified func -- 
+                         when function name was not given take it as
+                         being the base name of the module name
+the options are:
+  -r|--relaxed-casts   when evaluating AST objects make polymorphic type casts
+  -s|--strict-casts    when evaluating AST objects make exact type casts (default)
+  -T|--trace-eval      trace or not the tree evaluation algorithm (default not)
+     --no-trace-eval
+  -d|--debug           print some debugging output
+  -D|--no-debug        do not print debugging output (default)
+     --debug-ext-func  pass '--debug' to inner extension function
+     --help-ext-func   pass '--help' to inner extension function
+     --dump-options    print options and exit
+     --verbose         be verbose
+  -v|--version         print version numbers and exit
+  -?|--help            display this help info and exit
+$ ./tree -F abc/abc.so --help-ext
+usage: tree (action|option)* (input)*
+where the actions are:
+  -c|--type-check      type check given input (default)
+  -A|--ast-build       build the AST object of given input
+  -t|--print-types     output the AST type definitions of given module
+  -o|--print-obj       build and print the AST object of given input
+  -F|--ext-function <module-name>[::<func-name>]
+                       load given module and run specified func -- 
+                         when function name was not given take it as
+                         being the base name of the module name
+the options are:
+  -r|--relaxed-casts   when evaluating AST objects make polymorphic type casts
+  -s|--strict-casts    when evaluating AST objects make exact type casts (default)
+  -T|--trace-eval      trace or not the tree evaluation algorithm (default not)
+     --no-trace-eval
+  -d|--debug           print some debugging output
+  -D|--no-debug        do not print debugging output (default)
+     --debug-ext-func  pass '--debug' to inner extension function
+     --help-ext-func   pass '--help' to inner extension function
+     --dump-options    print options and exit
+     --verbose         be verbose
+  -v|--version         print version numbers and exit
+  -?|--help            display this help info and exit
+$
+
+--[ options ]------------------------------------------------------------------
+
+$ ./tree --dump-opt
+home-dir:       .
+action:         pretty-print
+ext-func-name:  printer::pretty_print
+input-type:     text
+debug:          no
+debug-ext-func: no
+help-ext-func:  no
+verbose:        no
+argc:           0
+ext-argc:       0
+$ ./tree -F printer.so -- --dump-opt
+home-dir:       .
+action:         print-ast
+ext-func-name:  -
+indent-dots:    no
+debug:          no
+debug-ext-func: no
+help-ext-func:  no
+verbose:        no
+argc:           0
+ext-argc:       0
+$ ./tree -F cxxpy/cxxpy.so -- --dump-opt
+home-dir:       cxxpy
+action:         type-check
+ext-func-name:  -
+casts-type:     strict-casts
+trace-eval:     no
+debug:          no
+debug-ext-func: no
+help-ext-func:  no
+verbose:        no
+argc:           0
+ext-argc:       0
+$ ./tree -F abc/abc.so -- --dump-opt
+home-dir:       abc
+action:         type-check
+ext-func-name:  -
+casts-type:     strict-casts
+trace-eval:     no
+debug:          no
+debug-ext-func: no
+help-ext-func:  no
+verbose:        no
+argc:           0
+ext-argc:       0
+$
+
+--[ funcs ]--------------------------------------------------------------------
+
+$ tree() { set -o pipefail && ./tree "$@" 2>&1|sed -r '/^~?(node|raw)\(/d'; }
+$ tree --debug -F foo
+tree: ext-func: file: './foo.so'
+tree: error: failed loading module 'foo.so': ./foo.so: cannot open shared object file: No such file or directory
+command failed: tree --debug -F foo
+$ tree --debug -F printer::foo
+tree: ext-func: file: './printer.so'
+tree: ext-func: func: 'foo'
+tree: error: cannot find func 'foo': ./printer.so: undefined symbol: foo
+command failed: tree --debug -F printer::foo
+$ tree --debug -F cxxpy/cxxpy.so::foo
+tree: ext-func: file: 'cxxpy/cxxpy.so'
+tree: ext-func: func: 'foo'
+tree: error: cannot find func 'foo': cxxpy/cxxpy.so: undefined symbol: foo
+command failed: tree --debug -F cxxpy/cxxpy.so::foo
+$ tree --debug -F abc/abc.so::foo
+tree: ext-func: file: 'abc/abc.so'
+tree: ext-func: func: 'foo'
+tree: error: cannot find func 'foo': abc/abc.so: undefined symbol: foo
+command failed: tree --debug -F abc/abc.so::foo
+$ tree --debug -F printer::print -- -F foo
+tree: ext-func: file: './printer.so'
+tree: ext-func: func: 'print'
+tree: tree-printer: error: extension functions are not supported
+command failed: tree --debug -F printer::print -- -F foo
+$ tree --debug -F printer::dump -- -F foo
+tree: ext-func: file: './printer.so'
+tree: ext-func: func: 'dump'
+tree: tree-printer: error: extension functions are not supported
+command failed: tree --debug -F printer::dump -- -F foo
+$ tree --debug -F printer::pretty_print -- -F foo
+tree: ext-func: file: './printer.so'
+tree: ext-func: func: 'pretty_print'
+tree: tree-printer: error: extension functions are not supported
+command failed: tree --debug -F printer::pretty_print -- -F foo
+$ tree --debug -F printer::terse_print -- -F foo
+tree: ext-func: file: './printer.so'
+tree: ext-func: func: 'terse_print'
+tree: tree-printer: error: extension functions are not supported
+command failed: tree --debug -F printer::terse_print -- -F foo
+$ tree --debug-ext -F cxxpy/cxxpy.so 'Node()' -- -F cxxpy/printer::print
+tree: ext-func: file: 'cxxpy/printer.so'
+tree: ext-func: func: 'print'
+tree: cxxpy-printer: error: extension functions are not supported
+command failed: tree --debug-ext -F cxxpy/cxxpy.so 'Node()' -- -F cxxpy/printer::print
+$ tree --debug-ext -F abc/abc.so 'Node()' -- -F abc/printer::print
+tree: ext-func: file: 'abc/printer.so'
+tree: ext-func: func: 'print'
+tree: abc-printer: error: extension functions are not supported
+command failed: tree --debug-ext -F abc/abc.so 'Node()' -- -F abc/printer::print
+$
+
+--[ limits ]-------------------------------------------------------------------
+
+$ tree() { ./tree "$@"; }
+$ tree -t
+tree: tree-printer: error: no input given
+command failed: tree -t
+$ tree -t ''
+tree: parse error: <text>:1:1: expected token IDENT but got EOS
+command failed: tree -t ''
+$ tree -f
+tree: tree-printer: error: no input given
+command failed: tree -f
+$ tree -f foo
+tree: error: foo: cannot open file: No such file or directory
+command failed: tree -f foo
+$ tree -f /dev/zero
+tree: error: /dev/zero: file is not regular
+command failed: tree -f /dev/zero
+$ echo|tree -f -
+tree: parse error: <stdin>:1:1: expected token IDENT but got EOS
+command failed: echo|tree -f -
+$ echo -n|tree -f -
+tree: parse error: <stdin>:1:1: expected token IDENT but got EOS
+command failed: echo -n|tree -f -
+$
+
+--[ parse ]--------------------------------------------------------------------
+
+$ tree() { ./tree --verbose -n "$@"; }
+$ tree $'\n\n\n\n\n'
+tree: parse error: <text>:5:1: expected token IDENT but got EOS
+tree: parse error: <text>:5:1: 
+tree: parse error: <text>:5:1: ^
+command failed: tree $'\n\n\n\n\n'
+$ tree $'A\n\n\n\n\n'
+tree: parse error: <text>:5:1: expected token "(" but got EOS
+tree: parse error: <text>:5:1: 
+tree: parse error: <text>:5:1: ^
+command failed: tree $'A\n\n\n\n\n'
+$ tree $'\n\n\n\nA\n'
+tree: parse error: <text>:5:2: expected token "(" but got EOS
+tree: parse error: <text>:5:2: A
+tree: parse error: <text>:5:2:  ^
+command failed: tree $'\n\n\n\nA\n'
+$ tree $'\n\n\n\nA  \n'
+tree: parse error: <text>:5:4: expected token "(" but got EOS
+tree: parse error: <text>:5:4: A  
+tree: parse error: <text>:5:4:    ^
+command failed: tree $'\n\n\n\nA  \n'
+$ tree -d $'\n\n\n\nA  \n'
+skip_spaces          pos(1,1)   ^\n\n\n\n$ pos(5,1)
+next_token           pos(5,2)   tok: pos(5,1)   type=IDENT    lex='A'                ^  \n$
+parse                pos(5,2)   tok: pos(5,1)   type=IDENT    lex='A'                ^  \n$
+parse_tree           pos(5,2)   tok: pos(5,1)   type=IDENT    lex='A'                ^  \n$
+parse_tree_node      pos(5,2)   tok: pos(5,1)   type=IDENT    lex='A'                ^  \n$
+parse_node_name      pos(5,2)   tok: pos(5,1)   type=IDENT    lex='A'                ^  \n$
+skip_spaces          pos(5,2)   ^  \n$ pos(5,4)
+next_token           pos(5,4)   tok: pos(5,4)   type=EOS      lex=''                 ^$
+tree: parse error: <text>:5:4: expected token "(" but got EOS
+tree: parse error: <text>:5:4: A  
+tree: parse error: <text>:5:4:    ^
+command failed: tree -d $'\n\n\n\nA  \n'
+$ tree $'\n    \n         \n"abc"\ndef"\nghi'
+tree: parse error: <text>:4:1: expected token IDENT but got STR
+tree: parse error: <text>:4:1: "abc"
+tree: parse error: <text>:4:1: ^
+command failed: tree $'\n    \n         \n"abc"\ndef"\nghi'
+$ tree $'\n    \n         \n"abc\ndef"\nghi'
+tree: parse error: <text>:4:5: end of input line inside literal
+tree: parse error: <text>:4:5: "abc
+tree: parse error: <text>:4:5:     ^
+command failed: tree $'\n    \n         \n"abc\ndef"\nghi'
+$ tree "A('\')"
+tree: parse error: <text>:1:7: end of input inside literal
+tree: parse error: <text>:1:7: A('\')
+tree: parse error: <text>:1:7:       ^
+command failed: tree "A('\')"
+$ tree 'A("\")'
+tree: parse error: <text>:1:7: end of input inside literal
+tree: parse error: <text>:1:7: A("\")
+tree: parse error: <text>:1:7:       ^
+command failed: tree 'A("\")'
+$ tree $'A("\\\n")'
+tree: parse error: <text>:1:5: end of input line inside literal
+tree: parse error: <text>:1:5: A("\
+tree: parse error: <text>:1:5:     ^
+command failed: tree $'A("\\\n")'
+#
+# $ for((i=1;i<32;i++));do [ "$i" -eq 10 ] && continue; c="tree \$'A(\"\\x$(printf %x $i)\")'"; echo "$ $c"; eval "$c"; echo "command failed: $c"; done
+#
+# avoid a known bash bug:
+# $ tree $'A("\x1")'
+# tree: parse error: <text>:1:4: unexpected char '\x1'
+# tree: parse error: <text>:1:4: A("\x01")
+# tree: parse error: <text>:1:4:    ^
+# command failed: tree $'A("\x1")'
+$ tree $'A("\x2")'
+tree: parse error: <text>:1:4: unexpected char '\x2'
+tree: parse error: <text>:1:4: A("\x02")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x2")'
+$ tree $'A("\x3")'
+tree: parse error: <text>:1:4: unexpected char '\x3'
+tree: parse error: <text>:1:4: A("\x03")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x3")'
+$ tree $'A("\x4")'
+tree: parse error: <text>:1:4: unexpected char '\x4'
+tree: parse error: <text>:1:4: A("\x04")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x4")'
+$ tree $'A("\x5")'
+tree: parse error: <text>:1:4: unexpected char '\x5'
+tree: parse error: <text>:1:4: A("\x05")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x5")'
+$ tree $'A("\x6")'
+tree: parse error: <text>:1:4: unexpected char '\x6'
+tree: parse error: <text>:1:4: A("\x06")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x6")'
+$ tree $'A("\x7")'
+tree: parse error: <text>:1:4: unexpected char '\x7'
+tree: parse error: <text>:1:4: A("\x07")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x7")'
+$ tree $'A("\x8")'
+tree: parse error: <text>:1:4: unexpected char '\x8'
+tree: parse error: <text>:1:4: A("\x08")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x8")'
+$ tree $'A("\x9")'
+tree: parse error: <text>:1:4: unexpected char '\t'
+tree: parse error: <text>:1:4: A("\t")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x9")'
+$ tree $'A("\xb")'
+tree: parse error: <text>:1:4: unexpected char '\v'
+tree: parse error: <text>:1:4: A("\v")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xb")'
+$ tree $'A("\xc")'
+tree: parse error: <text>:1:4: unexpected char '\f'
+tree: parse error: <text>:1:4: A("\f")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xc")'
+$ tree $'A("\xd")'
+tree: parse error: <text>:1:4: unexpected char '\r'
+tree: parse error: <text>:1:4: A("\r")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xd")'
+$ tree $'A("\xe")'
+tree: parse error: <text>:1:4: unexpected char '\xe'
+tree: parse error: <text>:1:4: A("\x0e")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xe")'
+$ tree $'A("\xf")'
+tree: parse error: <text>:1:4: unexpected char '\xf'
+tree: parse error: <text>:1:4: A("\x0f")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xf")'
+$ tree $'A("\x10")'
+tree: parse error: <text>:1:4: unexpected char '\x10'
+tree: parse error: <text>:1:4: A("\x10")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x10")'
+$ tree $'A("\x11")'
+tree: parse error: <text>:1:4: unexpected char '\x11'
+tree: parse error: <text>:1:4: A("\x11")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x11")'
+$ tree $'A("\x12")'
+tree: parse error: <text>:1:4: unexpected char '\x12'
+tree: parse error: <text>:1:4: A("\x12")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x12")'
+$ tree $'A("\x13")'
+tree: parse error: <text>:1:4: unexpected char '\x13'
+tree: parse error: <text>:1:4: A("\x13")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x13")'
+$ tree $'A("\x14")'
+tree: parse error: <text>:1:4: unexpected char '\x14'
+tree: parse error: <text>:1:4: A("\x14")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x14")'
+$ tree $'A("\x15")'
+tree: parse error: <text>:1:4: unexpected char '\x15'
+tree: parse error: <text>:1:4: A("\x15")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x15")'
+$ tree $'A("\x16")'
+tree: parse error: <text>:1:4: unexpected char '\x16'
+tree: parse error: <text>:1:4: A("\x16")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x16")'
+$ tree $'A("\x17")'
+tree: parse error: <text>:1:4: unexpected char '\x17'
+tree: parse error: <text>:1:4: A("\x17")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x17")'
+$ tree $'A("\x18")'
+tree: parse error: <text>:1:4: unexpected char '\x18'
+tree: parse error: <text>:1:4: A("\x18")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x18")'
+$ tree $'A("\x19")'
+tree: parse error: <text>:1:4: unexpected char '\x19'
+tree: parse error: <text>:1:4: A("\x19")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x19")'
+$ tree $'A("\x1a")'
+tree: parse error: <text>:1:4: unexpected char '\x1a'
+tree: parse error: <text>:1:4: A("\x1a")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1a")'
+$ tree $'A("\x1b")'
+tree: parse error: <text>:1:4: unexpected char '\x1b'
+tree: parse error: <text>:1:4: A("\x1b")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1b")'
+$ tree $'A("\x1c")'
+tree: parse error: <text>:1:4: unexpected char '\x1c'
+tree: parse error: <text>:1:4: A("\x1c")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1c")'
+$ tree $'A("\x1d")'
+tree: parse error: <text>:1:4: unexpected char '\x1d'
+tree: parse error: <text>:1:4: A("\x1d")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1d")'
+$ tree $'A("\x1e")'
+tree: parse error: <text>:1:4: unexpected char '\x1e'
+tree: parse error: <text>:1:4: A("\x1e")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1e")'
+$ tree $'A("\x1f")'
+tree: parse error: <text>:1:4: unexpected char '\x1f'
+tree: parse error: <text>:1:4: A("\x1f")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\x1f")'
+#
+# end of previous 'for' meta-command
+#
+$ tree -n $'\xc3\xa1'
+tree: parse error: <text>:1:1: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:1: \xc3\xa1
+tree: parse error: <text>:1:1: ^
+command failed: tree -n $'\xc3\xa1'
+$ tree -n $'A\xc3\xa1'
+tree: parse error: <text>:1:2: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:2: A\xc3\xa1
+tree: parse error: <text>:1:2:  ^
+command failed: tree -n $'A\xc3\xa1'
+$ tree $'A(.\xc3\xa1="")'
+tree: parse error: <text>:1:4: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:4: A(.\xc3\xa1="")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A(.\xc3\xa1="")'
+$ tree $'A(.a=\xc3\xa1())'
+tree: parse error: <text>:1:6: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:6: A(.a=\xc3\xa1())
+tree: parse error: <text>:1:6:      ^
+command failed: tree $'A(.a=\xc3\xa1())'
+$ tree $'A(.a=\xc3\xa1)'
+tree: parse error: <text>:1:6: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:6: A(.a=\xc3\xa1)
+tree: parse error: <text>:1:6:      ^
+command failed: tree $'A(.a=\xc3\xa1)'
+$ tree $'A(.a=B\xc3\xa1())'
+tree: parse error: <text>:1:7: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:7: A(.a=B\xc3\xa1())
+tree: parse error: <text>:1:7:       ^
+command failed: tree $'A(.a=B\xc3\xa1())'
+$ tree $'A(\xc3\xa1")'
+tree: parse error: <text>:1:3: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:3: A(\xc3\xa1")
+tree: parse error: <text>:1:3:   ^
+command failed: tree $'A(\xc3\xa1")'
+$ tree $'A("\xc3\xa1")'
+tree: parse error: <text>:1:4: unexpected non-ascii char '\xc3'
+tree: parse error: <text>:1:4: A("\xc3\xa1")
+tree: parse error: <text>:1:4:    ^
+command failed: tree $'A("\xc3\xa1")'
+$ tree 'A('
+tree: parse error: <text>:1:3: unexpected token EOS in node_args
+tree: parse error: <text>:1:3: A(
+tree: parse error: <text>:1:3:   ^
+command failed: tree 'A('
+$ tree "A('"
+tree: parse error: <text>:1:4: end of input inside literal
+tree: parse error: <text>:1:4: A('
+tree: parse error: <text>:1:4:    ^
+command failed: tree "A('"
+$ tree "A('"$'\n'"')"
+tree: parse error: <text>:1:4: end of input line inside literal
+tree: parse error: <text>:1:4: A('
+tree: parse error: <text>:1:4:    ^
+command failed: tree "A('"$'\n'"')"
+$ tree 'A(.'
+tree: parse error: <text>:1:4: expected token NAME but got EOS
+tree: parse error: <text>:1:4: A(.
+tree: parse error: <text>:1:4:    ^
+command failed: tree 'A(.'
+$ tree 'A(.a'
+tree: parse error: <text>:1:5: expected token "=" but got EOS
+tree: parse error: <text>:1:5: A(.a
+tree: parse error: <text>:1:5:     ^
+command failed: tree 'A(.a'
+$ tree 'A(.a='
+tree: parse error: <text>:1:6: unexpected token EOS in arg_value
+tree: parse error: <text>:1:6: A(.a=
+tree: parse error: <text>:1:6:      ^
+command failed: tree 'A(.a='
+$ tree 'A(.a=5'
+tree: parse error: <text>:1:6: unexpected token NUM in arg_value
+tree: parse error: <text>:1:6: A(.a=5
+tree: parse error: <text>:1:6:      ^
+command failed: tree 'A(.a=5'
+$ tree 'A(.a=)'
+tree: parse error: <text>:1:6: unexpected token ")" in arg_value
+tree: parse error: <text>:1:6: A(.a=)
+tree: parse error: <text>:1:6:      ^
+command failed: tree 'A(.a=)'
+$ tree "A(.a=''))"
+tree: parse error: <text>:1:9: expected token EOS but got ")"
+tree: parse error: <text>:1:9: A(.a=''))
+tree: parse error: <text>:1:9:         ^
+command failed: tree "A(.a=''))"
+$ tree 'A(.a=B'
+tree: parse error: <text>:1:7: expected token "(" but got EOS
+tree: parse error: <text>:1:7: A(.a=B
+tree: parse error: <text>:1:7:       ^
+command failed: tree 'A(.a=B'
+$ tree 'A(.a=B('
+tree: parse error: <text>:1:8: unexpected token EOS in node_args
+tree: parse error: <text>:1:8: A(.a=B(
+tree: parse error: <text>:1:8:        ^
+command failed: tree 'A(.a=B('
+$ tree 'A(.a=B(('
+tree: parse error: <text>:1:8: unexpected token "(" in node_args
+tree: parse error: <text>:1:8: A(.a=B((
+tree: parse error: <text>:1:8:        ^
+command failed: tree 'A(.a=B(('
+$ tree 'A(.a=B()'
+tree: parse error: <text>:1:9: expected token ")" but got EOS
+tree: parse error: <text>:1:9: A(.a=B()
+tree: parse error: <text>:1:9:         ^
+command failed: tree 'A(.a=B()'
+$ tree 'A(.a=B()))'
+tree: parse error: <text>:1:10: expected token EOS but got ")"
+tree: parse error: <text>:1:10: A(.a=B()))
+tree: parse error: <text>:1:10:          ^
+command failed: tree 'A(.a=B()))'
+$ tree 'A(.a=B['
+tree: parse error: <text>:1:7: expected token "(" but got "["
+tree: parse error: <text>:1:7: A(.a=B[
+tree: parse error: <text>:1:7:       ^
+command failed: tree 'A(.a=B['
+$ tree 'A(.a=B(]'
+tree: parse error: <text>:1:8: unexpected token "]" in node_args
+tree: parse error: <text>:1:8: A(.a=B(]
+tree: parse error: <text>:1:8:        ^
+command failed: tree 'A(.a=B(]'
+$ tree 'A(.a=list'
+tree: parse error: <text>:1:10: expected token "<" but got EOS
+tree: parse error: <text>:1:10: A(.a=list
+tree: parse error: <text>:1:10:          ^
+command failed: tree 'A(.a=list'
+$ tree 'A(.a=list<'
+tree: parse error: <text>:1:11: expected token IDENT but got EOS
+tree: parse error: <text>:1:11: A(.a=list<
+tree: parse error: <text>:1:11:           ^
+command failed: tree 'A(.a=list<'
+$ tree 'A(.a=list<B'
+tree: parse error: <text>:1:12: expected token ">" but got EOS
+tree: parse error: <text>:1:12: A(.a=list<B
+tree: parse error: <text>:1:12:            ^
+command failed: tree 'A(.a=list<B'
+$ tree 'A(.a=list<B>'
+tree: parse error: <text>:1:13: expected token "[" but got EOS
+tree: parse error: <text>:1:13: A(.a=list<B>
+tree: parse error: <text>:1:13:             ^
+command failed: tree 'A(.a=list<B>'
+$ tree 'A(.a=list<B>['
+tree: parse error: <text>:1:14: expected token "]" but got EOS
+tree: parse error: <text>:1:14: A(.a=list<B>[
+tree: parse error: <text>:1:14:              ^
+command failed: tree 'A(.a=list<B>['
+$ tree 'A(.a=list<B>[)'
+tree: parse error: <text>:1:14: expected token "]" but got ")"
+tree: parse error: <text>:1:14: A(.a=list<B>[)
+tree: parse error: <text>:1:14:              ^
+command failed: tree 'A(.a=list<B>[)'
+$ tree 'A(.a=list<B>[]'
+tree: parse error: <text>:1:15: expected token ")" but got EOS
+tree: parse error: <text>:1:15: A(.a=list<B>[]
+tree: parse error: <text>:1:15:               ^
+command failed: tree 'A(.a=list<B>[]'
+$ tree 'A(.x=list<B>[['
+tree: parse error: <text>:1:15: expected token NUM but got EOS
+tree: parse error: <text>:1:15: A(.x=list<B>[[
+tree: parse error: <text>:1:15:               ^
+command failed: tree 'A(.x=list<B>[['
+$ tree 'A(.x=list<B>[[0'
+tree: parse error: <text>:1:16: expected token "]" but got EOS
+tree: parse error: <text>:1:16: A(.x=list<B>[[0
+tree: parse error: <text>:1:16:                ^
+command failed: tree 'A(.x=list<B>[[0'
+$ tree 'A(.x=list<B>[[0]'
+tree: parse error: <text>:1:17: expected token "=" but got EOS
+tree: parse error: <text>:1:17: A(.x=list<B>[[0]
+tree: parse error: <text>:1:17:                 ^
+command failed: tree 'A(.x=list<B>[[0]'
+$ tree 'A(.x=list<B>[[0]='
+tree: parse error: <text>:1:18: expected token IDENT but got EOS
+tree: parse error: <text>:1:18: A(.x=list<B>[[0]=
+tree: parse error: <text>:1:18:                  ^
+command failed: tree 'A(.x=list<B>[[0]='
+$ tree 'A(.x=list<B>[[0]=0'
+tree: parse error: <text>:1:18: expected token IDENT but got NUM
+tree: parse error: <text>:1:18: A(.x=list<B>[[0]=0
+tree: parse error: <text>:1:18:                  ^
+command failed: tree 'A(.x=list<B>[[0]=0'
+$ tree 'A(.x=list<B>[[0]=C'
+tree: parse error: <text>:1:19: expected token "(" but got EOS
+tree: parse error: <text>:1:19: A(.x=list<B>[[0]=C
+tree: parse error: <text>:1:19:                   ^
+command failed: tree 'A(.x=list<B>[[0]=C'
+$ tree 'A(.x=list<B>[[0]=C('
+tree: parse error: <text>:1:20: unexpected token EOS in node_args
+tree: parse error: <text>:1:20: A(.x=list<B>[[0]=C(
+tree: parse error: <text>:1:20:                    ^
+command failed: tree 'A(.x=list<B>[[0]=C('
+$ tree 'A(.x=list<B>[[0]=C(]'
+tree: parse error: <text>:1:20: unexpected token "]" in node_args
+tree: parse error: <text>:1:20: A(.x=list<B>[[0]=C(]
+tree: parse error: <text>:1:20:                    ^
+command failed: tree 'A(.x=list<B>[[0]=C(]'
+$ tree 'A(.x=list<B>[[0]=C()'
+tree: parse error: <text>:1:21: expected token "]" but got EOS
+tree: parse error: <text>:1:21: A(.x=list<B>[[0]=C()
+tree: parse error: <text>:1:21:                     ^
+command failed: tree 'A(.x=list<B>[[0]=C()'
+$ tree 'A(.x=list<B>[[0]=C())'
+tree: parse error: <text>:1:21: expected token "]" but got ")"
+tree: parse error: <text>:1:21: A(.x=list<B>[[0]=C())
+tree: parse error: <text>:1:21:                     ^
+command failed: tree 'A(.x=list<B>[[0]=C())'
+$ tree 'A(.x=list<B>[[0]=C()]'
+tree: parse error: <text>:1:22: expected token ")" but got EOS
+tree: parse error: <text>:1:22: A(.x=list<B>[[0]=C()]
+tree: parse error: <text>:1:22:                      ^
+command failed: tree 'A(.x=list<B>[[0]=C()]'
+$ tree 'A(.x=list<B>[[0]=C]'
+tree: parse error: <text>:1:19: expected token "(" but got "]"
+tree: parse error: <text>:1:19: A(.x=list<B>[[0]=C]
+tree: parse error: <text>:1:19:                   ^
+command failed: tree 'A(.x=list<B>[[0]=C]'
+$ tree 'A(.x=list<B>[[0]=C)'
+tree: parse error: <text>:1:19: expected token "(" but got ")"
+tree: parse error: <text>:1:19: A(.x=list<B>[[0]=C)
+tree: parse error: <text>:1:19:                   ^
+command failed: tree 'A(.x=list<B>[[0]=C)'
+$ tree 'A(.x=list<B>[[0]=C])'
+tree: parse error: <text>:1:19: expected token "(" but got "]"
+tree: parse error: <text>:1:19: A(.x=list<B>[[0]=C])
+tree: parse error: <text>:1:19:                   ^
+command failed: tree 'A(.x=list<B>[[0]=C])'
+$ tree 'A(.x=list<B>[[0]=C)])'
+tree: parse error: <text>:1:19: expected token "(" but got ")"
+tree: parse error: <text>:1:19: A(.x=list<B>[[0]=C)])
+tree: parse error: <text>:1:19:                   ^
+command failed: tree 'A(.x=list<B>[[0]=C)])'
+$ tree 'A(.x=list<B>[[0]=C()])'
+$ tree 'A(.x=list<B>[[-1]=C()])'
+tree: parse error: <text>:1:15: unexpected char '-'
+tree: parse error: <text>:1:15: A(.x=list<B>[[-1]=C()])
+tree: parse error: <text>:1:15:               ^
+command failed: tree 'A(.x=list<B>[[-1]=C()])'
+$ tree 'A(.x=list<B>[[255]=C()])'
+$ tree 'A(.x=list<B>[[256]=C()])'
+tree: parse error: <text>:1:15: invalid list-elem-index '256'
+tree: parse error: <text>:1:15: A(.x=list<B>[[256]=C()])
+tree: parse error: <text>:1:15:               ^
+command failed: tree 'A(.x=list<B>[[256]=C()])'
+$
+
+--[ tree ]---------------------------------------------------------------------
+
+$ tree() { ./tree "$@" -- -i; }
+$ tree -p "A('x')"
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('A')
+.   .   .args = LiteralArgs(
+.   .   .   .literal = Literal('x')
+.   .   )
+.   )
+)
+$ tree -u "A('x')"
+Tree(
+.   TreeNode(
+.   .   NodeName('A')
+.   .   LiteralArgs(
+.   .   .   Literal('x')
+.   .   )
+.   )
+)
+$ tree -P "A('x')"
+A('x')
+$ tree -p 'D(.l=list<B>[[0]=B()])'
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('D')
+.   .   .args = ListArgs(
+.   .   .   .list = list<NodeArg> [
+.   .   .   .   [0] = NodeArg(
+.   .   .   .   .   .name = ArgName('l')
+.   .   .   .   .   .value = ListValue(
+.   .   .   .   .   .   .list = NodeList(
+.   .   .   .   .   .   .   .base = NodeName('B')
+.   .   .   .   .   .   .   .elems = list<ListElem> [
+.   .   .   .   .   .   .   .   [0] = ListElem(
+.   .   .   .   .   .   .   .   .   .index = '0'
+.   .   .   .   .   .   .   .   .   .node = TreeNode(
+.   .   .   .   .   .   .   .   .   .   .name = NodeName('B')
+.   .   .   .   .   .   .   .   .   .   .args = ListArgs(
+.   .   .   .   .   .   .   .   .   .   .   .list = list<NodeArg> []
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   ]
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -u 'D(.l=list<B>[[0]=B()])'
+Tree(
+.   TreeNode(
+.   .   NodeName('D')
+.   .   ListArgs(
+.   .   .   list<NodeArg> [
+.   .   .   .   NodeArg(
+.   .   .   .   .   ArgName('l')
+.   .   .   .   .   ListValue(
+.   .   .   .   .   .   NodeList(
+.   .   .   .   .   .   .   NodeName('B')
+.   .   .   .   .   .   .   list<ListElem> [
+.   .   .   .   .   .   .   .   ListElem(
+.   .   .   .   .   .   .   .   .   '0'
+.   .   .   .   .   .   .   .   .   TreeNode(
+.   .   .   .   .   .   .   .   .   .   NodeName('B')
+.   .   .   .   .   .   .   .   .   .   ListArgs(
+.   .   .   .   .   .   .   .   .   .   .   list<NodeArg> []
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   ]
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -P 'D(.l=list<B>[[0]=B()])'
+D(
+.   .l = list<B> [
+.   .   [0] = B()
+.   ]
+)
+$ tree -T 'D(.l=list<B>[[0]=B()])'
+D(.l=list<B>[[0]=B()])
+$
+
+--[ print ]--------------------------------------------------------------------
+
+$ tree() { ./tree "$@" -- -i; }
+$ tree -p 'A("\"")'
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('A')
+.   .   .args = LiteralArgs(
+.   .   .   .literal = Literal('\"')
+.   .   )
+.   )
+)
+$ tree -T 'A("\"")'
+A('\"')
+$ tree -p "A('\'')"
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('A')
+.   .   .args = LiteralArgs(
+.   .   .   .literal = Literal('\'')
+.   .   )
+.   )
+)
+$ tree -T "A('\'')"
+A('\'')
+$ tree -p "A(.x=B().y='C'.z=D('E'))"
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('A')
+.   .   .args = ListArgs(
+.   .   .   .list = list<NodeArg> [
+.   .   .   .   [0] = NodeArg(
+.   .   .   .   .   .name = ArgName('x')
+.   .   .   .   .   .value = NodeValue(
+.   .   .   .   .   .   .node = TreeNode(
+.   .   .   .   .   .   .   .name = NodeName('B')
+.   .   .   .   .   .   .   .args = ListArgs(
+.   .   .   .   .   .   .   .   .list = list<NodeArg> []
+.   .   .   .   .   .   .   )
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   .   [1] = NodeArg(
+.   .   .   .   .   .name = ArgName('y')
+.   .   .   .   .   .value = LiteralValue(
+.   .   .   .   .   .   .literal = Literal('C')
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   .   [2] = NodeArg(
+.   .   .   .   .   .name = ArgName('z')
+.   .   .   .   .   .value = NodeValue(
+.   .   .   .   .   .   .node = TreeNode(
+.   .   .   .   .   .   .   .name = NodeName('D')
+.   .   .   .   .   .   .   .args = LiteralArgs(
+.   .   .   .   .   .   .   .   .literal = Literal('E')
+.   .   .   .   .   .   .   )
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -u "A(.x=B().y='C'.z=D('E'))"
+Tree(
+.   TreeNode(
+.   .   NodeName('A')
+.   .   ListArgs(
+.   .   .   list<NodeArg> [
+.   .   .   .   NodeArg(
+.   .   .   .   .   ArgName('x')
+.   .   .   .   .   NodeValue(
+.   .   .   .   .   .   TreeNode(
+.   .   .   .   .   .   .   NodeName('B')
+.   .   .   .   .   .   .   ListArgs(
+.   .   .   .   .   .   .   .   list<NodeArg> []
+.   .   .   .   .   .   .   )
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   .   NodeArg(
+.   .   .   .   .   ArgName('y')
+.   .   .   .   .   LiteralValue(
+.   .   .   .   .   .   Literal('C')
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   .   NodeArg(
+.   .   .   .   .   ArgName('z')
+.   .   .   .   .   NodeValue(
+.   .   .   .   .   .   TreeNode(
+.   .   .   .   .   .   .   NodeName('D')
+.   .   .   .   .   .   .   LiteralArgs(
+.   .   .   .   .   .   .   .   Literal('E')
+.   .   .   .   .   .   .   )
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -P "A(.x=B().y='C'.z=D('E'))"
+A(
+.   .x = B()
+.   .y = 'C'
+.   .z = D('E')
+)
+$ tree -p "A(.l=list<B>[[1]=C()[0]=D('x')])"
+Tree(
+.   .root = TreeNode(
+.   .   .name = NodeName('A')
+.   .   .args = ListArgs(
+.   .   .   .list = list<NodeArg> [
+.   .   .   .   [0] = NodeArg(
+.   .   .   .   .   .name = ArgName('l')
+.   .   .   .   .   .value = ListValue(
+.   .   .   .   .   .   .list = NodeList(
+.   .   .   .   .   .   .   .base = NodeName('B')
+.   .   .   .   .   .   .   .elems = list<ListElem> [
+.   .   .   .   .   .   .   .   [0] = ListElem(
+.   .   .   .   .   .   .   .   .   .index = '1'
+.   .   .   .   .   .   .   .   .   .node = TreeNode(
+.   .   .   .   .   .   .   .   .   .   .name = NodeName('C')
+.   .   .   .   .   .   .   .   .   .   .args = ListArgs(
+.   .   .   .   .   .   .   .   .   .   .   .list = list<NodeArg> []
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   [1] = ListElem(
+.   .   .   .   .   .   .   .   .   .index = '0'
+.   .   .   .   .   .   .   .   .   .node = TreeNode(
+.   .   .   .   .   .   .   .   .   .   .name = NodeName('D')
+.   .   .   .   .   .   .   .   .   .   .args = LiteralArgs(
+.   .   .   .   .   .   .   .   .   .   .   .literal = Literal('x')
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   ]
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -u "A(.l=list<B>[[1]=C()[0]=D('x')])"
+Tree(
+.   TreeNode(
+.   .   NodeName('A')
+.   .   ListArgs(
+.   .   .   list<NodeArg> [
+.   .   .   .   NodeArg(
+.   .   .   .   .   ArgName('l')
+.   .   .   .   .   ListValue(
+.   .   .   .   .   .   NodeList(
+.   .   .   .   .   .   .   NodeName('B')
+.   .   .   .   .   .   .   list<ListElem> [
+.   .   .   .   .   .   .   .   ListElem(
+.   .   .   .   .   .   .   .   .   '1'
+.   .   .   .   .   .   .   .   .   TreeNode(
+.   .   .   .   .   .   .   .   .   .   NodeName('C')
+.   .   .   .   .   .   .   .   .   .   ListArgs(
+.   .   .   .   .   .   .   .   .   .   .   list<NodeArg> []
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   ListElem(
+.   .   .   .   .   .   .   .   .   '0'
+.   .   .   .   .   .   .   .   .   TreeNode(
+.   .   .   .   .   .   .   .   .   .   NodeName('D')
+.   .   .   .   .   .   .   .   .   .   LiteralArgs(
+.   .   .   .   .   .   .   .   .   .   .   Literal('x')
+.   .   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   .   )
+.   .   .   .   .   .   .   ]
+.   .   .   .   .   .   )
+.   .   .   .   .   )
+.   .   .   .   )
+.   .   .   ]
+.   .   )
+.   )
+)
+$ tree -P "A(.l=list<B>[[1]=C()[0]=D('x')])"
+A(
+.   .l = list<B> [
+.   .   [1] = C()
+.   .   [0] = D('x')
+.   ]
+)
+$
+
+
+--[ cxxpy ]--------------------------------------------------------------------
+
+$ tree() { ./tree -F cxxpy/cxxpy.so "$@"; }
+$ tree -- -t
+<Node>;
+<Ident> : Node @ <char*> [ident];
+<Str> : Node @ <char*> [str];
+<Expr> : Node;
+<PrimaryExpr> : Expr;
+<IdentExpr> : PrimaryExpr @ <Ident>* [ident];
+<StrExpr> : PrimaryExpr @ <Str>* [str];
+<ParenExpr> : PrimaryExpr @ <Expr>* [expr];
+<DictExpr> : PrimaryExpr;
+<EmptyDictExpr> : DictExpr;
+<KeyDatumDictExpr> : DictExpr @ <KeyDatumList>* [key_datums];
+<KeyDatum> : Node @ <Expr>* [expr1], <Expr>* [expr2];
+<KeyDatumList> : Node @ list<KeyDatum> [list];
+<AttrRef> : PrimaryExpr @ <PrimaryExpr>* [expr], <IdentExpr>* [ident];
+<CallArg> : Node @ <Expr>* [expr];
+<CallArgList> : Node @ list<CallArg> [list];
+<CallExpr> : PrimaryExpr;
+<EmptyCallExpr> : CallExpr @ <PrimaryExpr>* [expr];
+<ArgsCallExpr> : CallExpr @ <PrimaryExpr>* [expr], <CallArgList>* [args];
+<OrTest> : Expr @ <Expr>* [expr1], <Expr>* [expr2];
+<AndTest> : Expr @ <Expr>* [expr1], <Expr>* [expr2];
+<NotTest> : Expr @ <Expr>* [expr];
+<Comp> : Node @ <AST::comp_op_t::type_t> [op], <PrimaryExpr>* [prim];
+<CompExpr> : Expr @ <PrimaryExpr>* [prim], list<Comp> [comps];
+<Stmt> : Node;
+<SimpleStmt> : Stmt;
+<ExprStmt> : SimpleStmt @ <Expr>* [expr];
+<AssertStmt> : SimpleStmt;
+<AssertStmt1> : AssertStmt @ <Expr>* [expr1];
+<AssertStmt2> : AssertStmt @ <Expr>* [expr1], <Expr>* [expr2];
+<Target> : Node;
+<IdentTarget> : Target @ <IdentExpr>* [ident];
+<AttrRefTarget> : Target @ <AttrRef>* [attr];
+<TargetList> : Node @ list<Target> [list];
+<AssignStmt> : SimpleStmt @ <TargetList>* [targets], <Expr>* [expr];
+<DelStmt> : SimpleStmt @ <TargetList>* [targets];
+<ExprList> : Node @ list<Expr> [list];
+<PrintStmt> : SimpleStmt @ <ExprList>* [exprs], <bool> [trail_comma];
+<SimpleStmtList> : Stmt @ list<SimpleStmt> [list];
+<StmtList> : Stmt @ list<Stmt> [list];
+<FileInput> : Node @ <StmtList>* [stmts];
+<InteractInput> : Node @ <SimpleStmtList>* [stmts];
+<EvalInput> : Node @ <Expr>* [expr];
+<InputInput> : Node @ <Expr>* [expr];
+$
+
+--[ abc ]----------------------------------------------------------------------
+
+$ tree() { ./tree -F abc/abc.so "$@"; }
+$ tree -- -t
+<Node>;
+<A> : Node;
+<B> : Node @ <A>* [a];
+<C> : Node @ list<B> [b];
+<D> : Node @ <char*> [c];
+<N> : Node @ <B>* [x], <C>* [y], <D>* [z];
+<M> : Node @ <A>* [a], list<B> [b], <char*> [c];
+<P> : Node @ <A>* [x], <A>* [y];
+<Q> : A;
+<R> : Q;
+<L> : Node @ list<Q> [q];
+<S> : Q @ <bool> [b];
+$ tree "S('0')" -- -o
+S(.b='0')
+$ tree "S()"
+tree: error: ast-type S: expected 1 args, but got 0
+command failed: tree "S()"
+$ tree "S(.a='0')"
+tree: error: ast-type S: arg #1: expected name 'b', but got 'a'
+command failed: tree "S(.a='0')"
+$ tree "S(.b=A())"
+tree: error: ast-type S: arg #1: cannot cast from type 'A' to 'bool'
+command failed: tree "S(.b=A())"
+$ tree "P(.x=A().y=Q())"
+tree: error: ast-type P: arg #2: cannot cast from type 'Q' to 'A'
+command failed: tree "P(.x=A().y=Q())"
+$ tree "P(.x=A().y=Q())" -- -or
+P(.x=A().y=Q())
+$ tree "L(.q=list<R>[])" -- -os
+tree: error: ast-type L: arg #1: cannot cast from type 'list<R>' to 'list<Q>'
+command failed: tree "L(.q=list<R>[])" -- -os
+$ tree "L(.q=list<R>[[0]=R()])" -- -os
+tree: error: ast-type L: arg #1: cannot cast from type 'list<R>' to 'list<Q>'
+command failed: tree "L(.q=list<R>[[0]=R()])" -- -os
+$ tree "L(.q=list<R>[])" -- -or
+L(.q=list<Q>[])
+$ tree "L(.q=list<R>[[0]=R()])" -- -or
+L(.q=list<Q>[[0]=R()])
+$ tree "L(.q=list<R>[[0]=A()])" -- -os
+tree: error: list<R>: arg #0: cannot cast from type 'A'
+command failed: tree "L(.q=list<R>[[0]=A()])" -- -os
+$ tree "L(.q=list<R>[[0]=A()])" -- -or
+tree: error: list<R>: arg #0: cannot cast from type 'A'
+command failed: tree "L(.q=list<R>[[0]=A()])" -- -or
+$
+

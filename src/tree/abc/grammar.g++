@@ -1,0 +1,39 @@
+# Copyright (C) 2016  Stefan Vargyas
+# 
+# This file is part of C++Py-Tree.
+# 
+# C++Py-Tree is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# C++Py-Tree is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with C++Py-Tree.  If not, see <http://www.gnu.org/licenses/>.
+
+<Node>;
+<A> : Node;
+<B> : Node @ <A>* [a];
+<C> : Node @ list<B> [b];
+<D> : Node @ <char*> [c];
+<N> : Node @ <B>* [x], <C>* [y], <D>* [z];
+<M> : Node @ <A>* [a], list<B> [b], <char*> [c];
+<P> : Node @ <A>* [x], <A>* [y];
+<Q> : A;
+<R> : Q;
+<L> : Node @ list<Q> [q];
+<S> : Q @ <bool> [b];
+
+<S> s : [ B ] ;
+<L> l : q* ;
+<P> p : a a;
+<M> m : a b* C;
+<N> n : b c d;
+<D> d : C ;
+<C> c : b* ;
+<B> b : a ;
+

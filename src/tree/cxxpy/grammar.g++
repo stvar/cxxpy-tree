@@ -1,0 +1,159 @@
+# Copyright (C) 2016  Stefan Vargyas
+# 
+# This file is part of C++Py-Tree.
+# 
+# C++Py-Tree is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# C++Py-Tree is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with C++Py-Tree.  If not, see <http://www.gnu.org/licenses/>.
+
+<Node>;
+<Ident> : Node @ <char*> [ident];
+<Str> : Node @ <char*> [str];
+<Expr> : Node;
+<PrimaryExpr> : Expr;
+<IdentExpr> : PrimaryExpr @ <Ident>* [ident];
+<StrExpr> : PrimaryExpr @ <Str>* [str];
+<ParenExpr> : PrimaryExpr @ <Expr>* [expr];
+<DictExpr> : PrimaryExpr;
+<EmptyDictExpr> : DictExpr;
+<KeyDatumDictExpr> : DictExpr @ <KeyDatumList>* [key_datums];
+<KeyDatum> : Node @ <Expr>* [expr1], <Expr>* [expr2];
+<KeyDatumList> : Node @ list<KeyDatum> [list];
+<AttrRef> : PrimaryExpr @ <PrimaryExpr>* [expr], <IdentExpr>* [ident];
+<CallArg> : Node @ <Expr>* [expr];
+<CallArgList> : Node @ list<CallArg> [list];
+<CallExpr> : PrimaryExpr;
+<EmptyCallExpr> : CallExpr @ <PrimaryExpr>* [expr];
+<ArgsCallExpr> : CallExpr @ <PrimaryExpr>* [expr], <CallArgList>* [args];
+<OrTest> : Expr @ <Expr>* [expr1], <Expr>* [expr2];
+<AndTest> : Expr @ <Expr>* [expr1], <Expr>* [expr2];
+<NotTest> : Expr @ <Expr>* [expr];
+<Comp> : Node @ <AST::comp_op_t::type_t> [op], <PrimaryExpr>* [prim];
+<CompExpr> : Expr @ <PrimaryExpr>* [prim], list<Comp> [comps];
+<Stmt> : Node;
+<SimpleStmt> : Stmt;
+<ExprStmt> : SimpleStmt @ <Expr>* [expr];
+<AssertStmt> : SimpleStmt;
+<AssertStmt1> : AssertStmt @ <Expr>* [expr1];
+<AssertStmt2> : AssertStmt @ <Expr>* [expr1], <Expr>* [expr2];
+<Target> : Node;
+<IdentTarget> : Target @ <IdentExpr>* [ident];
+<AttrRefTarget> : Target @ <AttrRef>* [attr];
+<TargetList> : Node @ list<Target> [list];
+<AssignStmt> : SimpleStmt @ <TargetList>* [targets], <Expr>* [expr];
+<DelStmt> : SimpleStmt @ <TargetList>* [targets];
+<ExprList> : Node @ list<Expr> [list];
+<PrintStmt> : SimpleStmt @ <ExprList>* [exprs], <bool> [trail_comma];
+<SimpleStmtList> : Stmt @ list<SimpleStmt> [list];
+<StmtList> : Stmt @ list<Stmt> [list];
+<FileInput> : Node @ <StmtList>* [stmts];
+<InteractInput> : Node @ <SimpleStmtList>* [stmts];
+<EvalInput> : Node @ <Expr>* [expr];
+<InputInput> : Node @ <Expr>* [expr];
+
+<PrimaryExpr> primary
+                : ident_expr
+                | str_expr
+                | paren_expr
+                | dict_expr
+                | attr_ref
+                | call_expr
+                ;
+<IdentExpr> ident_expr
+                : IDENT
+                ;
+<StrExpr> str_expr
+                : STR
+                ;
+<ParenExpr> paren_expr
+                : "(" expr ")"
+                ;
+<DictExpr> dict_expr
+                : "{" [key_datum_list] "}"
+                ;
+<KeyDatumList> key_datum_list
+                : key_datum ("," key_datum)* [","]
+                ;
+<KeyDatum> key_datum
+                : expr ":" expr
+                ;
+<AttrRef> attr_ref
+                : primary "." ident_expr
+                ;
+<CallExpr> call_expr
+                : primary "(" [ arg_list [","] ] ")"
+                ;
+<CallArgList> arg_list
+                : arg ("," arg)*
+                ;
+<CallArg> arg   : expr
+                ;
+<Expr> expr     : or_test
+                ;
+<Expr> or_test  : and_test
+                | or_test "or" and_test
+                ;
+<Expr> and_test : not_test
+                | and_test "and" not_test
+                ;
+<Expr> not_test : comp_expr
+                | "not" not_test
+                ;
+<CompExpr> comp_expr
+                : primary ( ("==" | "!=" | "is" [ "not" ]) primary )*
+                ;
+<SimpleStmt> simple_stmt
+                : expr_stmt
+                | assert_stmt
+                | assign_stmt
+                | del_stmt
+                | print_stmt
+                ;
+<ExprStmt> expr_stmt
+                : expr
+                ;
+<AssertStmt> assert_stmt
+                : "assert" expr ["," expr]
+                ;
+<Target> target : ident_expr
+                | attr_ref
+                ;
+<AssignStmt> assign_stmt
+                : (target "=")+ expr
+                ;
+<DelStmt> del_stmt
+                : "del" target_list
+                ;
+<TargetList> target_list
+                : target ("," target)* [","]
+                ;
+<PrintStmt> print_stmt
+                : "print" [expr ("," expr)* [","]]
+                ;
+<Stmt> stmt     : stmt_list NEWLINE
+                ;
+<SimpleStmtList> stmt_list
+                : simple_stmt (";" simple_stmt)* [";"]
+                ;
+<FileInput> file_input
+                : (NEWLINE | stmt)*
+                ;
+<InteractInput> interact_input
+                : [stmt_list] NEWLINE
+                ;
+<EvalInput> eval_input
+                : expr NEWLINE*
+                ;
+<InputInput> input_input
+                : expr NEWLINE
+                ;
+

@@ -1,0 +1,252 @@
+
+                                   C++Py-Tree
+                                   ~~~~~~~~~~
+                        Stefan Vargyas, stvar@yahoo.com
+
+                                  Dec 18, 2016
+
+
+Table of Contents
+-----------------
+
+0. Copyright
+1. The C++Py-Tree Program
+2. Configuring C++Py-Tree
+3. Building and Testing C++Py-Tree
+4. Primary Use Cases of C++Py-Tree
+5. References
+
+
+0. Copyright
+============
+
+This program is GPL-licensed free software. Its author is Stefan Vargyas. You
+can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+You should have received a copy of the GNU General Public License along with
+this program (look up for the file COPYING in the top directory of the source
+tree). If not, see http://gnu.org/licenses/gpl.html.
+
+
+1. The C++Py-Tree Program
+=========================
+
+Initially, C++Py-Tree program was a subproject of a larger project -- C++Py: an
+interpreter for a subset of Python language -- and was conceived as providing
+means to the C++Py compiler to get input directly from sourced abstract syntax
+trees (ASTs). This way the C++Py parser and compiler are decoupled from each
+other -- the compiler would need not rely upon the parser for providing AST
+objects --, thus their testing proceed separately.
+
+Subsequently, C++Py-Tree gained more importance as it was used by other projects
+subsumed or just related to the father C++Py project. 
+
+
+2. Configuring C++Py-Tree
+=========================
+
+As expected, the C++Py-Tree program is written in modern C++ and was developed
+over the time under a few GNU/Linux environments using GCC C++ compilers [1] --
+versions 4.1.2, 4.3.4 and an experimental 4.8.0 built from sources -- and a few
+common GNU/Linux power-tools.
+
+While writing C++ code, I regularly pay a good deal of attention making as
+explicit as possible each of the low-level choices assumed. To that effect
+the header file 'config.h' collects the following configuration parameters:
+
+  $ grep -Ehow 'CONFIG_[A-Z0-9_]+[A-Z0-9]' config.h|sort -u
+  CONFIG_INT_TO_PTR_IDENTOP
+  CONFIG_PTR_TO_INT_IDENTOP
+  CONFIG_VA_END_NOOP
+
+Before proceeding further to build C++Py-Tree, please assure yourself that each
+of the above 'CONFIG_*' parameters have a meaningful value, in accordance with
+the target platform (machine and compiler) on which the program is supposed to
+be built.
+
+
+3. Building and Testing C++Py-Tree
+==================================
+
+In the development of 'C++Py-Tree', I used the GCC compiler (of versions already
+mentioned above) and GNU 'make' v3.81. If using a non-GNU 'make', then is likely
+that some of the makefiles listed below would need a bit of tweaking:
+
+  $ find \( -name Makefile -o -name \*.mk \) -printf '%P\n'|sort
+  Makefile
+  common.mk
+  src/tree/Makefile
+  src/tree/abc/Makefile
+  src/tree/cxxpy/Makefile
+  src/tree/ext-common.mk
+
+Note that a prerequisite of building the program is that the version of GCC be 
+at least the above v4.8.0. That is because the program requires a substantial
+amount of C++11 features be implemented by the compiler and by its Standard C++
+Library.
+
+To build the program, simply issue the following command in the top directory of
+the source tree:
+
+  $ make
+
+Expect to get neither warnings nor errors out of 'make'. If everything went OK,
+'make' is supposed to have produced the following binaries (the file paths are
+relative to src/tree):
+
+  tree.so             Tree Lib
+  eval.so             Tree Eval Lib
+  printer.so          Tree Printer         extension of: tree program
+  abc/abc.so          Abc AST Type Lib     extension of: tree program
+  abc/printer.so      Abc AST Printer      extension of: abc.so lib
+  cxxpy/cxxpy.so      C++Py AST Type Lib   extension of: tree program
+  cxxpy/printer.so    C++Py AST Printer    extension of: cxxpy.so lib
+  tree                Tree main program
+
+To clean-up the source tree of compiler generated files or to remove all
+the files obtained from 'make', issue one of the following, respectively:
+
+  $ make clean
+
+  $ make allclean
+
+C++Py-Tree is equipped with a basic test-suite. For that look into the
+directory 'test' for shell script files of form 'test*.sh'. The main script
+is 'test.sh': it starts the whole regression testing process. Note that these
+bash shell scripts depend upon a few utility programs commonly found on every
+GNU/Linux installation. The 'test' directory contains additionally the source
+from which the 'test*.sh' bash scripts were generated: the file 'test.txt'.
+
+Invoking the shell script 'test/test.sh' produces a series of lines as shown:
+
+  $ cd test
+
+  $ ./test.sh
+  test: NAME RESULT
+  ...
+
+NAME is the name of the test case and RESULT is either 'OK' or 'failed'. The
+expected behaviour would be that of all test cases to succeed. In the case of
+things going the wrong way for a particular test case, more verbose output is
+obtainable when running the corresponding 'test-*.sh' shell script on its own.
+It will produce a diff between expected and actual output of 'trie'.
+
+Note that any user's explicit invocation of these bash test scripts must be
+initiated from within the 'test' directory.
+
+The programs used by the testing scripts 'test/test*.sh' are the following:
+
+  * GNU bash 3.2.51,
+  * GNU diffutils 2.8.7 (diff), and
+  * GNU sed 4.1.5
+
+
+4. Primary Use Cases of C++Py-Tree
+==================================
+
+After building the program by running 'make' in the top directory, you got the
+executable 'tree' in src/tree/ directory. For running it you must set a proper
+LD_LIBRARY_PATH by issuing the following commands in the top directory:
+
+  $ cd src/tree
+
+  $ export LD_LIBRARY_PATH=.:abc:cxxpy
+
+Then, simply try the following to get a short help screen:
+
+  $ ./tree --help
+
+For a given extension -- in this case 'abc.so' --, run the following command to
+obtain its brief usage information:
+
+  $ ./tree -F abc/abc.so --help-ext
+
+Below is what you get issuing a couple of calls to it (note the presence of
+option '-F abc/abc.so', which is instructing the 'tree' program to make use
+of 'abc.so' AST type lib extension).
+
+The following command prints out the AST type definitions the Abc AST type lib
+is defining. Note that the command line options following the double dash option
+are passed by the main program to its dynamically loaded extension.
+
+  $ tree() { ./tree -F abc/abc.so "$@"; }
+
+  $ tree -- -t
+  <Node>;
+  <A> : Node;
+  <B> : Node @ <A>* [a];
+  <C> : Node @ list<B> [b];
+  <D> : Node @ <char*> [c];
+  <N> : Node @ <B>* [x], <C>* [y], <D>* [z];
+  <M> : Node @ <A>* [a], list<B> [b], <char*> [c];
+  <P> : Node @ <A>* [x], <A>* [y];
+  <Q> : A;
+  <R> : Q;
+  <L> : Node @ list<Q> [q];
+  <S> : Q @ <bool> [b];
+
+The next command builds up the Abc AST object for the input tree expression
+"S('0')" and then prints it on stdout. Please remark that by the rule which is
+defining the AST type 'S', the given tree expression is in fact valid.
+
+  $ tree "S('0')" -- -o
+  S(.b='0')
+
+Even though all the four expressions below are well-formed (i.e. are satisfying
+the rules for making tree expressions -- see src/tree/grammar.g++), they are not
+valid, as shown by the output obtained running tree:
+
+  $ tree "S()"
+  tree: error: ast-type S: expected 1 args, but got 0
+
+  $ tree "S(.a='0')"
+  tree: error: ast-type S: arg #1: expected name 'b', but got 'a'
+
+  $ tree "S(.b=A())"
+  tree: error: ast-type S: arg #1: cannot cast from type 'A' to 'bool'
+
+  $ tree "P(.x=A().y=Q())"
+  tree: error: ast-type P: arg #2: cannot cast from type 'Q' to 'A'
+
+In case of the last tree expression, the output tells us that the program wasn't
+able to convert an 'Q' object to an 'A' object -- translated to the underlying
+implementation: cast from pointer to an instance of 'AST::Q' to one of 'AST::A'.
+At a first glance, this should count as not being an actual correct behaviour,
+since the above definition of 'Q' tells that it is extending 'A' -- translated
+in the implementation: class 'AST::Q' is derived from 'AST::A'.
+
+In fact, the program is providing two types of AST type casts. One is requiring
+the types of AST objects to match exactly the AST type definitions. The other
+relaxes the previous restriction by allowing type casts between polymorphic AST
+objects. This latter behaviour is enabled through '-r' command line switch:
+
+  $ tree "P(.x=A().y=Q())" -- -or
+  P(.x=A().y=Q())
+
+As it's perfectly reasonable, the polymorphic type cast is enabled for lists of
+AST types too (the command line option '-s' is the reverse of '-r'):
+
+  $ tree "L(.q=list<R>[])" -- -os
+  tree: error: ast-type L: arg #1: cannot cast from type 'list<R>' to 'list<Q>'
+
+  $ tree "L(.q=list<R>[[0]=R()])" -- -os
+  tree: error: ast-type L: arg #1: cannot cast from type 'list<R>' to 'list<Q>'
+
+  $ tree "L(.q=list<R>[])" -- -or
+  L(.q=list<Q>[])
+
+  $ tree "L(.q=list<R>[[0]=R()])" -- -or
+  L(.q=list<Q>[[0]=R()])
+
+
+5. References
+=============
+
+[1] GNU Compilers
+    http://gcc.gnu.org/onlinedocs/gcc-4.x.y/gcc/
+
+    where 'x.y' is '1.2', '3.4' and '8.0'
+
+
