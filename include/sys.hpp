@@ -43,11 +43,11 @@
 #define STRINGIFY(S)  STRINGIFY0(S)
 
 #define PRINTF_FMT(F) \
-	__attribute__ ((format(printf, F, F + 1)))
+    __attribute__ ((format(printf, F, F + 1)))
 #define NORETURN \
-	__attribute__ ((noreturn))
+    __attribute__ ((noreturn))
 #define UNUSED \
-	__attribute__ ((unused))
+    __attribute__ ((unused))
 
 // stev: assert 8 bits per byte 
 #if CHAR_BIT != 8
@@ -64,7 +64,7 @@
 #endif
 
 #define UINTPTR_FORMAT \
-	"0x%0" STRINGIFY(UINTPTR_WIDTH) PRIxPTR
+    "0x%0" STRINGIFY(UINTPTR_WIDTH) PRIxPTR
 
 #define EXT_FUNC_ENTRY extern "C"
 
@@ -72,7 +72,7 @@ namespace Sys {
 
 #if __cplusplus >= 201103L
 # define CXX_ASSERT2(E, M) \
-	static_assert(E, M)
+    static_assert(E, M)
 #else
 template<bool b>
 struct cxx_assert_t;
@@ -82,202 +82,202 @@ struct cxx_assert_t<true>
 { enum { value }; };
 
 # define CXX_ASSERT2(E, M) \
-	do { \
-		(void) Sys::cxx_assert_t<(X)>::value; \
-	} \
-	while (0)
+    do { \
+        (void) Sys::cxx_assert_t<(X)>::value; \
+    } \
+    while (0)
 #endif
 
 #define CXX_ASSERT(E) \
-	CXX_ASSERT2(E, #E)
+    CXX_ASSERT2(E, #E)
 
 void assert_failed(
-	const char *file, int line,
-	const char *func, const char* expr)
-	NORETURN;
+    const char *file, int line,
+    const char *func, const char* expr)
+    NORETURN;
 
 void unexpect_error(
-	const char* file, int line,
-	const char* func, const char* msg, ...)
-	PRINTF_FMT(4)
-	NORETURN;
+    const char* file, int line,
+    const char* func, const char* msg, ...)
+    PRINTF_FMT(4)
+    NORETURN;
 
 #define OUT_OF_MEMORY() \
-	do { \
-		SYS_UNEXPECT_ERR("out of memory"); \
-	} \
-	while (0)
+    do { \
+        SYS_UNEXPECT_ERR("out of memory"); \
+    } \
+    while (0)
 
 #define SYS_UNEXPECT_ERR(M, ...) \
-	do { \
-		Sys::unexpect_error(__FILE__, __LINE__, __func__, M, ## __VA_ARGS__); \
-	} \
-	while (0)
+    do { \
+        Sys::unexpect_error(__FILE__, __LINE__, __func__, M, ## __VA_ARGS__); \
+    } \
+    while (0)
 
 #ifdef DEBUG
 # define SYS_ASSERT(E) \
-	do { \
-		if (!(E)) \
-			Sys::assert_failed(__FILE__, __LINE__, __func__, #E); \
-	} \
-	while (0)
+    do { \
+        if (!(E)) \
+            Sys::assert_failed(__FILE__, __LINE__, __func__, #E); \
+    } \
+    while (0)
 #else
 # define SYS_ASSERT(E) \
-	do {} while (0)
+    do {} while (0)
 #endif
 
 class mem_t
 {
 public:
-	typedef char* ptr_t;
+    typedef char* ptr_t;
 
-	mem_t(const mem_t&) = delete;
-	mem_t& operator=(const mem_t&) = delete;
+    mem_t(const mem_t&) = delete;
+    mem_t& operator=(const mem_t&) = delete;
 
-	mem_t() noexcept :
-		p(nullptr), n(0), e(nullptr)
-	{}
+    mem_t() noexcept :
+        p(nullptr), n(0), e(nullptr)
+    {}
 
-	mem_t(size_t _n) noexcept :
-		mem_t()
-	{ set(realloc(nullptr, _n), _n); }
+    mem_t(size_t _n) noexcept :
+        mem_t()
+    { set(realloc(nullptr, _n), _n); }
 
-	mem_t(mem_t&& m) noexcept :
-		p(m.p), n(m.n), e(m.e)
-	{ m.reset(); }
+    mem_t(mem_t&& m) noexcept :
+        p(m.p), n(m.n), e(m.e)
+    { m.reset(); }
 
-	~mem_t() noexcept
-	{ if (p) free(p); reset(); }
+    ~mem_t() noexcept
+    { if (p) free(p); reset(); }
 
-	mem_t& operator=(mem_t&& m) noexcept
-	// move-and-swap idiom
-	{ mem_t t(std::move(m)); swap(t); return *this; }
+    mem_t& operator=(mem_t&& m) noexcept
+    // move-and-swap idiom
+    { mem_t t(std::move(m)); swap(t); return *this; }
 
-	ptr_t get() const noexcept
-	{ return p; }
+    ptr_t get() const noexcept
+    { return p; }
 
-	size_t size() const noexcept
-	{ return n; }
+    size_t size() const noexcept
+    { return n; }
 
-	ptr_t end() const noexcept
-	{ return e; }
+    ptr_t end() const noexcept
+    { return e; }
 
-	bool end(ptr_t _e) noexcept
-	{ bool r = _e >= p && _e <= p + n; if (r) e = _e; return r; }
+    bool end(ptr_t _e) noexcept
+    { bool r = _e >= p && _e <= p + n; if (r) e = _e; return r; }
 
-	ptr_t realloc(size_t _n) noexcept
-	{ set(realloc(p, _n), _n); return p; }
+    ptr_t realloc(size_t _n) noexcept
+    { set(realloc(p, _n), _n); return p; }
 
-	ptr_t release() noexcept
-	{ ptr_t r = p; reset(); return r; }
+    ptr_t release() noexcept
+    { ptr_t r = p; reset(); return r; }
 
 private:
-	void swap(mem_t& m) noexcept
-	{ std::swap(p, m.p); std::swap(n, m.n); std::swap(e, m.e); }
+    void swap(mem_t& m) noexcept
+    { std::swap(p, m.p); std::swap(n, m.n); std::swap(e, m.e); }
 
-	void reset() noexcept
-	{ p = nullptr; n = 0; e = nullptr; }
+    void reset() noexcept
+    { p = nullptr; n = 0; e = nullptr; }
 
-	void set(ptr_t _p, size_t _n) noexcept
-	{ p = _p; n = _p ? _n : 0; e = _p + n; }
+    void set(ptr_t _p, size_t _n) noexcept
+    { p = _p; n = _p ? _n : 0; e = _p + n; }
 
-	static ptr_t realloc(ptr_t p, size_t n) noexcept
-	{
-		ptr_t r = n ? static_cast<ptr_t>(::realloc(p, n)) : nullptr;
-		if (p && !r) ::free(p);
-		return r;
-	}
+    static ptr_t realloc(ptr_t p, size_t n) noexcept
+    {
+        ptr_t r = n ? static_cast<ptr_t>(::realloc(p, n)) : nullptr;
+        if (p && !r) ::free(p);
+        return r;
+    }
 
-	static void free(ptr_t p) noexcept
-	{ ::free(p); }
+    static void free(ptr_t p) noexcept
+    { ::free(p); }
 
-	ptr_t  p;
-	size_t n;
-	ptr_t  e;
+    ptr_t  p;
+    size_t n;
+    ptr_t  e;
 };
 
 class buf_t : private mem_t
 {
 public:
-	typedef mem_t base_t;
+    typedef mem_t base_t;
 
-	buf_t(const buf_t&) = delete;
-	buf_t& operator=(const buf_t&) = delete;
+    buf_t(const buf_t&) = delete;
+    buf_t& operator=(const buf_t&) = delete;
 
-	buf_t(buf_t&&) = delete;
-	buf_t& operator=(buf_t&&) = delete;
+    buf_t(buf_t&&) = delete;
+    buf_t& operator=(buf_t&&) = delete;
 
-	buf_t(size_t _incr = 256) :
-		base_t(),
-		incr(_incr),
-		size(0),
-		ptr(nullptr)
-	{
-		realloc(incr);
-	}
+    buf_t(size_t _incr = 256) :
+        base_t(),
+        incr(_incr),
+        size(0),
+        ptr(nullptr)
+    {
+        realloc(incr);
+    }
 
 #ifdef DEBUG
-	class iterator :
-		public std::iterator<std::input_iterator_tag, const char>
-	{
-	public:
-		iterator& operator++()
-		{
-			while (*ptr && ptr < end)
-				++ ptr;
-			if (ptr < end)
-				++ ptr;
-			return *this;
-		}
+    class iterator :
+        public std::iterator<std::input_iterator_tag, const char>
+    {
+    public:
+        iterator& operator++()
+        {
+            while (*ptr && ptr < end)
+                ++ ptr;
+            if (ptr < end)
+                ++ ptr;
+            return *this;
+        }
 
-		iterator operator++(int)
-		{ auto r = *this; operator++(); return r; }
+        iterator operator++(int)
+        { auto r = *this; operator++(); return r; }
 
-		const char* operator*() const
-		{ return ptr; }
+        const char* operator*() const
+        { return ptr; }
 
-		bool operator==(const iterator& a) const
-		{ return ptr == a.ptr && end == a.end; }
-		bool operator!=(const iterator& a) const
-		{ return !operator==(a); }
+        bool operator==(const iterator& a) const
+        { return ptr == a.ptr && end == a.end; }
+        bool operator!=(const iterator& a) const
+        { return !operator==(a); }
 
-	private:
-		iterator(char *_ptr, char *_end) : ptr(_ptr), end(_end) {}
+    private:
+        iterator(char *_ptr, char *_end) : ptr(_ptr), end(_end) {}
 
-		char *ptr;
-		char *end;
+        char *ptr;
+        char *end;
 
-		friend class buf_t;
-	};
+        friend class buf_t;
+    };
 
-	inline iterator begin() const
-	{ return iterator(base_t::get(), ptr); }
+    inline iterator begin() const
+    { return iterator(base_t::get(), ptr); }
 
-	inline iterator end() const
-	{ return iterator(ptr, ptr); }
+    inline iterator end() const
+    { return iterator(ptr, ptr); }
 #endif // DEBUG
 
-	const char* nassign(const char *key, size_t sz)
-	{ ptr = base_t::get(); return nadd(key, sz); }
+    const char* nassign(const char *key, size_t sz)
+    { ptr = base_t::get(); return nadd(key, sz); }
 
-	const char* nadd(const char *key, size_t sz);
+    const char* nadd(const char *key, size_t sz);
 
-	const char* assign(const char *key)
-	{ return nassign(key, strlen(key)); }
+    const char* assign(const char *key)
+    { return nassign(key, strlen(key)); }
 
-	const char* add(const char *key)
-	{ return nadd(key, strlen(key)); }
+    const char* add(const char *key)
+    { return nadd(key, strlen(key)); }
 
 protected:
-	const char* get() const
-	{ return base_t::get(); }
+    const char* get() const
+    { return base_t::get(); }
 
 private:
-	size_t incr;
-	size_t size;
-	char  *ptr;
+    size_t incr;
+    size_t size;
+    char  *ptr;
 
-	void realloc(size_t n);
+    void realloc(size_t n);
 };
 
 #ifdef SYS_OPTS
@@ -285,10 +285,10 @@ private:
 struct options_t
 {
 #ifdef DEBUG
-	unsigned debug;
+    unsigned debug;
 #endif
 #ifdef COLORIZE
-	unsigned colorize;
+    unsigned colorize;
 #endif
 };
 
@@ -302,58 +302,58 @@ std::string format(const char *fmt, ...) PRINTF_FMT(1);
 
 inline std::string vformat(const char *fmt, va_list args) noexcept
 {
-	char buf[256];
+    char buf[256];
 
-	vsnprintf(buf, sizeof buf - 1, fmt, args);
-	buf[255] = 0;
+    vsnprintf(buf, sizeof buf - 1, fmt, args);
+    buf[255] = 0;
 
-	return buf;
+    return buf;
 }
 
 inline std::string format(const char *fmt, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, fmt);
-	auto str = vformat(fmt, args);
-	va_end(args);
+    va_start(args, fmt);
+    auto str = vformat(fmt, args);
+    va_end(args);
 
-	return str;
+    return str;
 }
 
 class file_t
 {
 public:
-	static const size_t max_size = 10485760; // ten megabytes
-	static const char stdin_name[];
+    static const size_t max_size = 10485760; // ten megabytes
+    static const char stdin_name[];
 
-	struct Error : public std::runtime_error
-	{
-		Error(const char* msg);
-		Error(const std::string& msg);
-	};
-	typedef mem_t buf_t;
+    struct Error : public std::runtime_error
+    {
+        Error(const char* msg);
+        Error(const std::string& msg);
+    };
+    typedef mem_t buf_t;
 
-	file_t(const file_t&) = delete;
-	file_t& operator=(const file_t&) = delete;
+    file_t(const file_t&) = delete;
+    file_t& operator=(const file_t&) = delete;
 
-	file_t(file_t&&) = delete;
-	file_t& operator=(file_t&&) = delete;
+    file_t(file_t&&) = delete;
+    file_t& operator=(file_t&&) = delete;
 
-	file_t(const char* _name);
-	~file_t();
+    file_t(const char* _name);
+    ~file_t();
 
-	buf_t read();
+    buf_t read();
 
 private:
-	void error(const char* msg, ...) PRINTF_FMT(2);
-	void sys_error(const char* msg, ...) PRINTF_FMT(2);
+    void error(const char* msg, ...) PRINTF_FMT(2);
+    void sys_error(const char* msg, ...) PRINTF_FMT(2);
 
-	buf_t read_regular();
-	buf_t read_stdin();
+    buf_t read_regular();
+    buf_t read_stdin();
 
-	const char *name;
-	int         desc;
+    const char *name;
+    int         desc;
 };
 
 typedef int ext_func_result_t;
@@ -361,93 +361,93 @@ typedef int ext_func_result_t;
 class base_ext_func_t
 {
 public:
-	struct Error : public std::runtime_error
-	{
-		Error(const char* msg);
-		Error(const std::string& msg);
-	};
+    struct Error : public std::runtime_error
+    {
+        Error(const char* msg);
+        Error(const std::string& msg);
+    };
 
-	base_ext_func_t(const base_ext_func_t&) = delete;
-	base_ext_func_t& operator=(const base_ext_func_t&) = delete;
+    base_ext_func_t(const base_ext_func_t&) = delete;
+    base_ext_func_t& operator=(const base_ext_func_t&) = delete;
 
-	base_ext_func_t(base_ext_func_t&&) = delete;
-	base_ext_func_t& operator=(base_ext_func_t&&) = delete;
+    base_ext_func_t(base_ext_func_t&&) = delete;
+    base_ext_func_t& operator=(base_ext_func_t&&) = delete;
 
-	base_ext_func_t() :
-		mod_func(nullptr),
-		handle(nullptr)
-	{}
-	~base_ext_func_t()
-	{ unload(); }
+    base_ext_func_t() :
+        mod_func(nullptr),
+        handle(nullptr)
+    {}
+    ~base_ext_func_t()
+    { unload(); }
 
-	void load(
-		const char* home_dir,
-		const char* name,
+    void load(
+        const char* home_dir,
+        const char* name,
 #ifdef DEBUG
-		bool debug, 
+        bool debug, 
 #endif
-		const char* prefix);
+        const char* prefix);
 
-	void unload();
+    void unload();
 
-	bool is_loaded() const
-	{ return mod_func; }
+    bool is_loaded() const
+    { return mod_func; }
 
 protected:
-	void *mod_func;
+    void *mod_func;
 
 private:
-	class buf_t;
+    class buf_t;
 
-	void error(const char* msg, ...) PRINTF_FMT(2);
+    void error(const char* msg, ...) PRINTF_FMT(2);
 
-	void *handle;
+    void *handle;
 };
 
 template<typename O, typename P>
 class ext_func_t : public base_ext_func_t
 {
 public:
-	typedef O obj_t;
-	typedef P opt_t;
+    typedef O obj_t;
+    typedef P opt_t;
 
-	typedef ext_func_result_t (*func_t)(const obj_t*, const opt_t*);
+    typedef ext_func_result_t (*func_t)(const obj_t*, const opt_t*);
 
-	ext_func_result_t call(const obj_t* obj, const opt_t* opt) const
-	{
-		SYS_ASSERT(mod_func != nullptr);
-		return reinterpret_cast<func_t>(mod_func)(obj, opt);
-	}
+    ext_func_result_t call(const obj_t* obj, const opt_t* opt) const
+    {
+        SYS_ASSERT(mod_func != nullptr);
+        return reinterpret_cast<func_t>(mod_func)(obj, opt);
+    }
 };
 
 template<typename O, typename P>
 ext_func_result_t run_ext_func(
-	const O* obj, const P* opt, const char* prefix = nullptr)
+    const O* obj, const P* opt, const char* prefix = nullptr)
 {
-	static ext_func_t<O, P> ext_func;
+    static ext_func_t<O, P> ext_func;
 
-	// stev: opt->ext_func_name == nullptr means: 
-	// do not run any extension func; only return
-	// zero -- indicating a successful completion
-	if (opt->ext_func_name == nullptr)
-		return 0;
+    // stev: opt->ext_func_name == nullptr means: 
+    // do not run any extension func; only return
+    // zero -- indicating a successful completion
+    if (opt->ext_func_name == nullptr)
+        return 0;
 
-	if (!ext_func.is_loaded())
-		ext_func.load(
-			opt->home_dir,
-			opt->ext_func_name,
+    if (!ext_func.is_loaded())
+        ext_func.load(
+            opt->home_dir,
+            opt->ext_func_name,
 #ifdef DEBUG
-			opt->debug,
+            opt->debug,
 #endif
-			prefix);
+            prefix);
 
-	return ext_func.call(obj, opt);
+    return ext_func.call(obj, opt);
 }
 
 template<typename O, typename P>
 inline ext_func_result_t run_ext_func(
-	const std::unique_ptr<O>& obj, const P* opt,
-	const char* prefix = nullptr)
+    const std::unique_ptr<O>& obj, const P* opt,
+    const char* prefix = nullptr)
 { return run_ext_func(obj.get(), opt, prefix); }
 
 size_t digits(unsigned val);

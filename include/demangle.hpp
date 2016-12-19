@@ -74,55 +74,55 @@ namespace Sys {
 class demangle_t
 {
 public:
-	demangle_t() noexcept :
-		e(0), s(nullptr)
-	{}
+    demangle_t() noexcept :
+        e(0), s(nullptr)
+    {}
 
-	demangle_t(const char* _s) noexcept :
-		demangle_t()
-	{ s = abi::__cxa_demangle(_s, nullptr, nullptr, &e); }
+    demangle_t(const char* _s) noexcept :
+        demangle_t()
+    { s = abi::__cxa_demangle(_s, nullptr, nullptr, &e); }
 
-	demangle_t(const demangle_t& d) noexcept :
-		e(d.e), s(nullptr)
-	{ if (d.s) s = strdup(d.s); if (d.s && !s) e = -1; }
+    demangle_t(const demangle_t& d) noexcept :
+        e(d.e), s(nullptr)
+    { if (d.s) s = strdup(d.s); if (d.s && !s) e = -1; }
 
-	demangle_t(demangle_t&& d) noexcept :
-		e(d.e), s(d.s)
-	{ d.reset(); }
+    demangle_t(demangle_t&& d) noexcept :
+        e(d.e), s(d.s)
+    { d.reset(); }
 
-	~demangle_t() noexcept
-	{ if (s) free(s); reset(); }
+    ~demangle_t() noexcept
+    { if (s) free(s); reset(); }
 
-	demangle_t& operator=(const demangle_t& d)
-	// copy-and-swap idiom
-	{ demangle_t t(d); swap(t); return *this; }
+    demangle_t& operator=(const demangle_t& d)
+    // copy-and-swap idiom
+    { demangle_t t(d); swap(t); return *this; }
 
-	demangle_t& operator=(demangle_t&& d) noexcept
-	// move-and-swap idiom
-	{ demangle_t t(std::move(d)); swap(t); return *this; }
+    demangle_t& operator=(demangle_t&& d) noexcept
+    // move-and-swap idiom
+    { demangle_t t(std::move(d)); swap(t); return *this; }
 
-	int err() const
-	{ return e; }
+    int err() const
+    { return e; }
 
-	const char* str() const
-	{ return s; }
+    const char* str() const
+    { return s; }
 
-	void print(std::ostream& ost) const
-	{ ost << (s ? s : "???");  }
+    void print(std::ostream& ost) const
+    { ost << (s ? s : "???");  }
 
 private:
-	void swap(demangle_t& d) noexcept
-	{ std::swap(e, d.e); std::swap(s, d.s); }
+    void swap(demangle_t& d) noexcept
+    { std::swap(e, d.e); std::swap(s, d.s); }
 
-	void reset() noexcept
-	{ e = 0; s = nullptr; }
+    void reset() noexcept
+    { e = 0; s = nullptr; }
 
-	int   e;
-	char* s;
+    int   e;
+    char* s;
 };
 
 inline std::ostream& operator<<(
-	std::ostream& ost, const demangle_t& obj)
+    std::ostream& ost, const demangle_t& obj)
 { obj.print(ost); return ost; }
 
 inline demangle_t demangle(const char* s)

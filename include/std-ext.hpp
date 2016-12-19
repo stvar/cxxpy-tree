@@ -29,16 +29,16 @@ namespace Ext {
 template<typename R, typename A>
 struct unary_func_t
 {
-	typedef R result_type;
-	typedef A argument_type;
+    typedef R result_type;
+    typedef A argument_type;
 };
 
 template<typename R, typename A0, typename A1 = A0>
 struct binary_func_t
 {
-	typedef R result_type;
-	typedef A0 first_argument_type;
-	typedef A1 second_argument_type;
+    typedef R result_type;
+    typedef A0 first_argument_type;
+    typedef A1 second_argument_type;
 };
 
 template<typename T>
@@ -120,22 +120,22 @@ constexpr bool is_same()
 template<typename T, typename U>
 constexpr bool is_cv_same()
 {
-	return is_same<
-		typename std::remove_cv<T>::type,
-		typename std::remove_cv<U>::type>();
+    return is_same<
+        typename std::remove_cv<T>::type,
+        typename std::remove_cv<U>::type>();
 }
 
 template<typename T>
 constexpr bool is_char_pointer()
 {
-	typedef
-		typename std::remove_pointer<T>::type
-		base_t;
-	return
-		is_pointer<T>()
-		&& (is_cv_same<base_t, char>()
-			|| is_cv_same<base_t, unsigned char>()
-			|| is_cv_same<base_t, signed char>());
+    typedef
+        typename std::remove_pointer<T>::type
+        base_t;
+    return
+        is_pointer<T>()
+        && (is_cv_same<base_t, char>()
+            || is_cv_same<base_t, unsigned char>()
+            || is_cv_same<base_t, signed char>());
 }
 
 template<typename T>
@@ -156,448 +156,448 @@ constexpr size_t digits10()
 
 template<typename T>
 constexpr typename std::enable_if<
-	is_integer<T>(),
+    is_integer<T>(),
 bool>::type
-	sign()
+    sign()
 { return is_signed<T>(); }
 
 template<typename T>
 constexpr typename std::enable_if<
-	is_integer<T>(),
+    is_integer<T>(),
 size_t>::type
-	width()
+    width()
 { return digits<T>(); }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(width<R>() == width<V>()),
+    (width<R>() == width<V>()),
 bool>::type
-	check_limits(V v UNUSED)
+    check_limits(V v UNUSED)
 {
-	return true;
+    return true;
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == sign<V>()) &&
-	(width<R>() > width<V>()),
+    (sign<R>() == sign<V>()) &&
+    (width<R>() > width<V>()),
 bool>::type
-	check_limits(V v UNUSED)
+    check_limits(V v UNUSED)
 {
-	return true;
+    return true;
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == false) &&
-	(sign<V>() == false) &&
-	(width<R>() < width<V>()),
+    (sign<R>() == false) &&
+    (sign<V>() == false) &&
+    (width<R>() < width<V>()),
 bool>::type
-	check_limits(V v)
+    check_limits(V v)
 {
-	return
-		v <= max<R>();
+    return
+        v <= max<R>();
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == true) &&
-	(sign<V>() == true) &&
-	(width<R>() < width<V>()),
+    (sign<R>() == true) &&
+    (sign<V>() == true) &&
+    (width<R>() < width<V>()),
 bool>::type
-	check_limits(V v)
+    check_limits(V v)
 {
-	return
-		v >= min<R>() &&
-		v <= max<R>();
+    return
+        v >= min<R>() &&
+        v <= max<R>();
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == false) &&
-	(sign<V>() == true) &&
-	(width<R>() > width<V>()),
+    (sign<R>() == false) &&
+    (sign<V>() == true) &&
+    (width<R>() > width<V>()),
 bool>::type
-	check_limits(V v)
+    check_limits(V v)
 {
-	CXX_ASSERT(
-		//!!!CAST
-		min<R>() == 0 &&
-		V(min<R>()) > min<V>());
-	return
-		//!!!CAST
-		v >= V(min<R>());
+    CXX_ASSERT(
+        //!!!CAST
+        min<R>() == 0 &&
+        V(min<R>()) > min<V>());
+    return
+        //!!!CAST
+        v >= V(min<R>());
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == true) &&
-	(sign<V>() == false) &&
-	(width<R>() > width<V>()),
+    (sign<R>() == true) &&
+    (sign<V>() == false) &&
+    (width<R>() > width<V>()),
 bool>::type
-	check_limits(V v UNUSED)
+    check_limits(V v UNUSED)
 {
-	return true;
+    return true;
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == false) &&
-	(sign<V>() == true) &&
-	(width<R>() < width<V>()),
+    (sign<R>() == false) &&
+    (sign<V>() == true) &&
+    (width<R>() < width<V>()),
 bool>::type
-	check_limits(V v)
+    check_limits(V v)
 {
-	CXX_ASSERT(
-		//!!!CAST
-		min<R>() == 0 &&
-		max<R>() > 0 &&
-		V(min<R>()) > min<V>() &&
-		V(max<R>()) < max<V>());
-	return
-		//!!!CAST
-		v >= V(min<R>()) &&
-		v <= V(max<R>());
+    CXX_ASSERT(
+        //!!!CAST
+        min<R>() == 0 &&
+        max<R>() > 0 &&
+        V(min<R>()) > min<V>() &&
+        V(max<R>()) < max<V>());
+    return
+        //!!!CAST
+        v >= V(min<R>()) &&
+        v <= V(max<R>());
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	(sign<R>() == true) &&
-	(sign<V>() == false) &&
-	(width<R>() < width<V>()),
+    (sign<R>() == true) &&
+    (sign<V>() == false) &&
+    (width<R>() < width<V>()),
 bool>::type
-	check_limits(V v)
+    check_limits(V v)
 {
-	CXX_ASSERT(
-		//!!!CAST
-		max<R>() > 0 &&
-		V(max<R>()) < max<V>());
-	return
-		//!!!CAST
-		v <= V(max<R>());
+    CXX_ASSERT(
+        //!!!CAST
+        max<R>() > 0 &&
+        V(max<R>()) < max<V>());
+    return
+        //!!!CAST
+        v <= V(max<R>());
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_integer<V>() &&
-	is_integer<R>(),
+    is_integer<V>() &&
+    is_integer<R>(),
 R>::type
-	integer_cast(V v)
+    integer_cast(V v)
 {
-	SYS_ASSERT(
-		check_limits<R>(v));
-	return
-		static_cast<R>(v);
+    SYS_ASSERT(
+        check_limits<R>(v));
+    return
+        static_cast<R>(v);
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_integer<V>() &&
-	is_integer<R>(),
+    is_integer<V>() &&
+    is_integer<R>(),
 bool>::type
-	integer_cast(V v, R& r)
+    integer_cast(V v, R& r)
 {
-	if (check_limits<R>(v)) {
-		r = static_cast<R>(v);
-		return true;
-	}
-	return false;
+    if (check_limits<R>(v)) {
+        r = static_cast<R>(v);
+        return true;
+    }
+    return false;
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_enum<V>() &&
-	is_integer<R>(),
+    is_enum<V>() &&
+    is_integer<R>(),
 R>::type
-	integer_cast(V v)
+    integer_cast(V v)
 {
-	typedef
-		typename
-			std::underlying_type<V>::type
-		enum_t;
-	CXX_ASSERT(
-		is_integer<enum_t>());
-	return
-		integer_cast<R>(
-			static_cast<enum_t>(v));
+    typedef
+        typename
+            std::underlying_type<V>::type
+        enum_t;
+    CXX_ASSERT(
+        is_integer<enum_t>());
+    return
+        integer_cast<R>(
+            static_cast<enum_t>(v));
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_enum<V>() &&
-	is_integer<R>(),
+    is_enum<V>() &&
+    is_integer<R>(),
 bool>::type
-	integer_cast(V v, R& r)
+    integer_cast(V v, R& r)
 {
-	typedef
-		typename
-			std::underlying_type<V>::type
-		enum_t;
-	CXX_ASSERT(
-		is_integer<enum_t>());
-	return
-		integer_cast<R>(
-			static_cast<enum_t>(v),
-			r);
+    typedef
+        typename
+            std::underlying_type<V>::type
+        enum_t;
+    CXX_ASSERT(
+        is_integer<enum_t>());
+    return
+        integer_cast<R>(
+            static_cast<enum_t>(v),
+            r);
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_integer<V>() &&
-	is_enum<R>(),
+    is_integer<V>() &&
+    is_enum<R>(),
 R>::type
-	enum_cast(V v)
+    enum_cast(V v)
 {
-	typedef
-		typename
-			std::underlying_type<R>::type
-		enum_t;
-	CXX_ASSERT(
-		is_integer<enum_t>());
-	return
-		static_cast<R>(
-			integer_cast<enum_t>(v));
+    typedef
+        typename
+            std::underlying_type<R>::type
+        enum_t;
+    CXX_ASSERT(
+        is_integer<enum_t>());
+    return
+        static_cast<R>(
+            integer_cast<enum_t>(v));
 }
 
 template<typename R, typename V>
 inline typename std::enable_if<
-	is_integer<V>() &&
-	is_enum<R>(),
+    is_integer<V>() &&
+    is_enum<R>(),
 bool>::type
-	enum_cast(V v, R& r)
+    enum_cast(V v, R& r)
 {
-	typedef
-		typename
-			std::underlying_type<R>::type
-		enum_t;
-	CXX_ASSERT(
-		is_integer<enum_t>());
-	enum_t e;
-	if (integer_cast<enum_t>(v, e)) {
-		r = static_cast<R>(e);
-		return true;
-	}
-	return false;
+    typedef
+        typename
+            std::underlying_type<R>::type
+        enum_t;
+    CXX_ASSERT(
+        is_integer<enum_t>());
+    enum_t e;
+    if (integer_cast<enum_t>(v, e)) {
+        r = static_cast<R>(e);
+        return true;
+    }
+    return false;
 }
 
 template<typename T>
 inline uintptr_t ptr_to_int(const T* v)
 {
-	CXX_ASSERT(
-		CONFIG_PTR_TO_INT_IDENTOP &&
-		is_unsigned_int<uintptr_t>() &&
-		sizeof(T*) == sizeof(uintptr_t));
-	return reinterpret_cast<uintptr_t>(v);
+    CXX_ASSERT(
+        CONFIG_PTR_TO_INT_IDENTOP &&
+        is_unsigned_int<uintptr_t>() &&
+        sizeof(T*) == sizeof(uintptr_t));
+    return reinterpret_cast<uintptr_t>(v);
 }
 
 template<typename T, typename V>
 inline T* int_to_ptr(V v)
 {
-	// stev: the static assertion below
-	// ensures that 'int_to_ptr' avoids
-	// narrowing casts on its input arg
-	CXX_ASSERT((
-		is_cv_same<V, uintptr_t>()));
-	CXX_ASSERT(
-		CONFIG_INT_TO_PTR_IDENTOP &&
-		is_unsigned_int<uintptr_t>() &&
-		sizeof(T*) == sizeof(uintptr_t));
-	return reinterpret_cast<T*>(v);
+    // stev: the static assertion below
+    // ensures that 'int_to_ptr' avoids
+    // narrowing casts on its input arg
+    CXX_ASSERT((
+        is_cv_same<V, uintptr_t>()));
+    CXX_ASSERT(
+        CONFIG_INT_TO_PTR_IDENTOP &&
+        is_unsigned_int<uintptr_t>() &&
+        sizeof(T*) == sizeof(uintptr_t));
+    return reinterpret_cast<T*>(v);
 }
 
 template<typename T>
 class box_t final
 {
 public:
-	typedef
-		typename
-			std::enable_if<
-				is_integer<T>(),
-				T>::type
-			type_t;
+    typedef
+        typename
+            std::enable_if<
+                is_integer<T>(),
+                T>::type
+            type_t;
 
-	box_t(box_t&&) = default;
-	box_t(const box_t&) = default;
+    box_t(box_t&&) = default;
+    box_t(const box_t&) = default;
 
-	box_t& operator=(box_t&&) = default;
-	box_t& operator=(const box_t&) = default;
+    box_t& operator=(box_t&&) = default;
+    box_t& operator=(const box_t&) = default;
 
-	// stev: the constructors below
-	// is not 'explicit' on purpose
+    // stev: the constructors below
+    // is not 'explicit' on purpose
 
-	//!!!ENABLE_IF
-	template<typename V>
-	box_t(box_t<V> a) :
-		v{integer_cast<type_t>(a.v)}
-	{}
+    //!!!ENABLE_IF
+    template<typename V>
+    box_t(box_t<V> a) :
+        v{integer_cast<type_t>(a.v)}
+    {}
 
-	//!!!ENABLE_IF
-	//template<typename V>
-	//box_t(
-	//	typename std::enable_if<
-	//		!is_cv_same<T, V>(),
-	//		box_t<V>>::type a) :
-	//	v{integer_cast<type_t>(a.v)}
-	//{}
+    //!!!ENABLE_IF
+    //template<typename V>
+    //box_t(
+    //	typename std::enable_if<
+    //		!is_cv_same<T, V>(),
+    //		box_t<V>>::type a) :
+    //	v{integer_cast<type_t>(a.v)}
+    //{}
 
-	//!!!ENABLE_IF
-	template<typename V>
-	box_t(V a) :
-		v{integer_cast<type_t>(a)}
-	{
-		CXX_ASSERT(
-			is_integer_or_enum<V>());
-	}
+    //!!!ENABLE_IF
+    template<typename V>
+    box_t(V a) :
+        v{integer_cast<type_t>(a)}
+    {
+        CXX_ASSERT(
+            is_integer_or_enum<V>());
+    }
 
-	//!!!ENABLE_IF
-	//template<typename V>
-	//box_t(
-	//	typename std::enable_if<
-	//		is_integer_or_enum<V>(),
-	//		V>::type a) :
-	//	v{integer_cast<type_t>(a)}
-	//{}
+    //!!!ENABLE_IF
+    //template<typename V>
+    //box_t(
+    //	typename std::enable_if<
+    //		is_integer_or_enum<V>(),
+    //		V>::type a) :
+    //	v{integer_cast<type_t>(a)}
+    //{}
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer_or_enum<V>(),
-		box_t&>::type
-	operator=(V a)
-	{
-		v = integer_cast<type_t>(a);
-		return *this;
-	}
+    template<typename V>
+    typename std::enable_if<
+        is_integer_or_enum<V>(),
+        box_t&>::type
+    operator=(V a)
+    {
+        v = integer_cast<type_t>(a);
+        return *this;
+    }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t&>::type
-	operator=(box_t<V> a)
-	{ return operator=(a.v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t&>::type
+    operator=(box_t<V> a)
+    { return operator=(a.v); }
 
-	//!!!ENABLE_IF
-	//template<typename V>
-	//operator typename std::enable_if<
-	//	is_integer_or_enum<V>(),
-	//	V>::type () const
-	//{ return integer_cast<V>(v); }
+    //!!!ENABLE_IF
+    //template<typename V>
+    //operator typename std::enable_if<
+    //	is_integer_or_enum<V>(),
+    //	V>::type () const
+    //{ return integer_cast<V>(v); }
 
-	//!!!ENABLE_IF
-	template<typename V>
-	operator V() const
-	{ return integer_cast<V>(v); }
+    //!!!ENABLE_IF
+    template<typename V>
+    operator V() const
+    { return integer_cast<V>(v); }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer_or_enum<V>(),
-		V>::type
-	as() const
-	{ return integer_cast<V>(v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer_or_enum<V>(),
+        V>::type
+    as() const
+    { return integer_cast<V>(v); }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t<V>>::type
-	as_box() const
-	{ return box_t<V>{v}; }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t<V>>::type
+    as_box() const
+    { return box_t<V>{v}; }
 
-	type_t as() const
-	{ return v; }
+    type_t as() const
+    { return v; }
 
-	type_t operator()() const
-	{ return v; }
+    type_t operator()() const
+    { return v; }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t>::type
-	operator-(V a) const
-	{ return box_t{v} -= a; }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t>::type
+    operator-(V a) const
+    { return box_t{v} -= a; }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t>::type
-	operator-(box_t<V> a)
-	{ return operator-(a.v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t>::type
+    operator-(box_t<V> a)
+    { return operator-(a.v); }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t>::type
-	operator+(V a) const
-	{ return box_t{v} += a; }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t>::type
+    operator+(V a) const
+    { return box_t{v} += a; }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t>::type
-	operator+(box_t<V> a)
-	{ return operator+(a.v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t>::type
+    operator+(box_t<V> a)
+    { return operator+(a.v); }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t&>::type
-	operator-=(V a)
-	{
-		v -= integer_cast<type_t>(a);
-		return *this;
-	}
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t&>::type
+    operator-=(V a)
+    {
+        v -= integer_cast<type_t>(a);
+        return *this;
+    }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t&>::type
-	operator-=(box_t<V> a)
-	{ return operator-=(a.v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t&>::type
+    operator-=(box_t<V> a)
+    { return operator-=(a.v); }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t&>::type
-	operator+=(V a)
-	{
-		v += integer_cast<type_t>(a);
-		return *this;
-	}
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t&>::type
+    operator+=(V a)
+    {
+        v += integer_cast<type_t>(a);
+        return *this;
+    }
 
-	template<typename V>
-	typename std::enable_if<
-		is_integer<V>(),
-		box_t&>::type
-	operator+=(box_t<V> a)
-	{ return operator+=(a.v); }
+    template<typename V>
+    typename std::enable_if<
+        is_integer<V>(),
+        box_t&>::type
+    operator+=(box_t<V> a)
+    { return operator+=(a.v); }
 
-	box_t& operator--()
-	{ v --; return *this; }
+    box_t& operator--()
+    { v --; return *this; }
 
-	box_t& operator++()
-	{ v --; return *this; }
+    box_t& operator++()
+    { v --; return *this; }
 
-	box_t operator--(int)
-	{ box_t r{v}; v --; return r; }
+    box_t operator--(int)
+    { box_t r{v}; v --; return r; }
 
-	box_t operator++(int)
-	{ box_t r{v}; v ++; return r; }
+    box_t operator++(int)
+    { box_t r{v}; v ++; return r; }
 
 private:
-	type_t v;
+    type_t v;
 };
 
 template<unsigned N, typename T>
 inline size_t digits(T v)
 {
-	CXX_ASSERT(
-		is_unsigned_int<T>() &&
-		N > 0);
-	size_t r = 0;
-	do {
-		v /= N;
-		r ++;
-	}
-	while (v > 0);
-	return r;
+    CXX_ASSERT(
+        is_unsigned_int<T>() &&
+        N > 0);
+    size_t r = 0;
+    do {
+        v /= N;
+        r ++;
+    }
+    while (v > 0);
+    return r;
 }
 
 typedef long long widest_sint_t;
@@ -606,114 +606,114 @@ typedef unsigned long long widest_uint_t;
 template<typename T>
 constexpr bool is_widest_int()
 {
-	return
-		is_cv_same<T, widest_sint_t>() ||
-		is_cv_same<T, widest_uint_t>();
+    return
+        is_cv_same<T, widest_sint_t>() ||
+        is_cv_same<T, widest_uint_t>();
 }
 
 template<typename T>
 struct widest_int_t
 {
-	typedef
-		typename std::enable_if<
-			is_integer<T>(),
-			typename
-				std::conditional<
-					is_unsigned<T>(),
-					widest_uint_t,
-					widest_sint_t
-				>::type
-			>::type
-		type;
+    typedef
+        typename std::enable_if<
+            is_integer<T>(),
+            typename
+                std::conditional<
+                    is_unsigned<T>(),
+                    widest_uint_t,
+                    widest_sint_t
+                >::type
+            >::type
+        type;
 };
 
 template<size_t N, typename T>
 constexpr typename std::enable_if<
-	is_unsigned_int<T>(),
+    is_unsigned_int<T>(),
 T>::type
-	max()
+    max()
 {
-	CXX_ASSERT(
-		N < digits<T>());
-	return (T(1) << N) - 1;
+    CXX_ASSERT(
+        N < digits<T>());
+    return (T(1) << N) - 1;
 }
 
 template<size_t N, typename T>
 inline typename std::enable_if<
-	is_unsigned_int<T>(),
+    is_unsigned_int<T>(),
 bool>::type
-	check_bits_cast(T v)
+    check_bits_cast(T v)
 { return v <= max<N, T>(); }
 
 template<size_t N, typename T>
 inline typename std::enable_if<
-	is_unsigned_int<T>(),
-	typename widest_int_t<T>::type
+    is_unsigned_int<T>(),
+    typename widest_int_t<T>::type
 >::type
-	bits_cast(T v)
+    bits_cast(T v)
 {
-	typedef
-		typename widest_int_t<T>::type
-		result_t;
-	SYS_ASSERT((
-		check_bits_cast<N, T>(v)));
-	return
-		static_cast<result_t>(v);
+    typedef
+        typename widest_int_t<T>::type
+        result_t;
+    SYS_ASSERT((
+        check_bits_cast<N, T>(v)));
+    return
+        static_cast<result_t>(v);
 }
 
 template<size_t N, typename T>
 inline typename std::enable_if<
-	is_unsigned_int<T>(),
+    is_unsigned_int<T>(),
 bool>::type
-	bits_cast(T v, typename widest_int_t<T>::type& r)
+    bits_cast(T v, typename widest_int_t<T>::type& r)
 {
-	typedef
-		typename widest_int_t<T>::type
-		result_t;
-	if (check_bits_cast<N, T>(v)) {
-		r = static_cast<result_t>(v);
-		return true;
-	}
-	return false;
+    typedef
+        typename widest_int_t<T>::type
+        result_t;
+    if (check_bits_cast<N, T>(v)) {
+        r = static_cast<result_t>(v);
+        return true;
+    }
+    return false;
 }
 
 extern bool parse_num(
-	const char* str, widest_sint_t& res, const char*& end);
+    const char* str, widest_sint_t& res, const char*& end);
 extern bool parse_num(
-	const char* str, widest_uint_t& res, const char*& end);
+    const char* str, widest_uint_t& res, const char*& end);
 
 template<typename T>
 inline typename std::enable_if<
-	!is_widest_int<T>() &&
-	is_integer<T>(),
+    !is_widest_int<T>() &&
+    is_integer<T>(),
 bool>::type
-	parse_num(const char* str, T& res, const char*& end)
+    parse_num(const char* str, T& res, const char*& end)
 {
-	typedef
-		typename widest_int_t<T>::type
-		wider_t;
-	wider_t val;
-	if (!parse_num(str, val, end))
-		return false;
-	if (!integer_cast(val, res)) {
-		errno = ERANGE;
-		return false;
-	}
-	return true;
+    typedef
+        typename widest_int_t<T>::type
+        wider_t;
+    wider_t val;
+    if (!parse_num(str, val, end))
+        return false;
+    if (!integer_cast(val, res)) {
+        errno = ERANGE;
+        return false;
+    }
+    return true;
 }
 
 template<typename T>
 inline bool
-	parse_num(const char* str, T& res)
+    parse_num(const char* str, T& res)
 {
-	const char* end;
-	if (!parse_num(str, res, end))
-		return false;
-	if (*end) {
-		errno = EINVAL;
-		return false;
-	}
-	return true;
+    const char* end;
+    if (!parse_num(str, res, end))
+        return false;
+    if (*end) {
+        errno = EINVAL;
+        return false;
+    }
+    return true;
 }
 
 // stev: Bjarne Stroustrup, TC++PL 4th edition,
@@ -814,37 +814,37 @@ template<typename T, array_index_t N>
 class array_t final
 {
 public:
-	typedef T elem_t;
-	typedef T type_t[N];
+    typedef T elem_t;
+    typedef T type_t[N];
 
-	typedef box_t<array_index_t> index_t;
+    typedef box_t<array_index_t> index_t;
 
-	explicit array_t(type_t& _a) : a{_a} {}
+    explicit array_t(type_t& _a) : a{_a} {}
 
-	elem_t operator[](index_t i) const
-	{ SYS_ASSERT(i() < N); return a[i()]; }
+    elem_t operator[](index_t i) const
+    { SYS_ASSERT(i() < N); return a[i()]; }
 
 private:
-	elem_t* a;
+    elem_t* a;
 };
 
 template<typename T, array_index_t N, array_index_t M>
 class array_t<T[M], N> final
 {
 public:
-	typedef array_t<T, M> elem_t;
-	typedef T type_t[N][M];
+    typedef array_t<T, M> elem_t;
+    typedef T type_t[N][M];
 
-	typedef box_t<array_index_t> index_t;
+    typedef box_t<array_index_t> index_t;
 
-	explicit array_t(type_t& _a) : a{_a} {}
+    explicit array_t(type_t& _a) : a{_a} {}
 
-	elem_t operator[](index_t i) const
-	{ SYS_ASSERT(i() < N); return elem_t(a[i()]); }
+    elem_t operator[](index_t i) const
+    { SYS_ASSERT(i() < N); return elem_t(a[i()]); }
 
 private:
-	typedef T inner_t[M];
-	inner_t* a;
+    typedef T inner_t[M];
+    inner_t* a;
 };
 
 template<typename T, size_t N>
@@ -860,222 +860,222 @@ class Repr;
 
 template <typename T>
 inline std::ostream& operator<<(
-	std::ostream& ost, const Repr<T>& repr)
+    std::ostream& ost, const Repr<T>& repr)
 { repr.print(ost); return ost; }
 
 template<typename T>
 class ReprPrint
 {
 public:
-	explicit ReprPrint(std::ostream& _ost) :
-		ost(_ost)
-	{}
+    explicit ReprPrint(std::ostream& _ost) :
+        ost(_ost)
+    {}
 
-	void operator()(const T& val)
-	{ ost << val; }
+    void operator()(const T& val)
+    { ost << val; }
 
 private:
-	std::ostream& ost;
+    std::ostream& ost;
 };
 
 enum struct char_repr_type_t {
-	quoted,
-	plain
+    quoted,
+    plain
 };
 
 enum struct str_repr_type_t {
-	string,
-	plain
+    string,
+    plain
 };
 
 template<>
 class ReprPrint<char>
 {
 public:
-	explicit ReprPrint(std::ostream& _ost) :
-		ost(_ost)
-	{}
+    explicit ReprPrint(std::ostream& _ost) :
+        ost(_ost)
+    {}
 
-	size_t operator()(char ch, str_repr_type_t type)
-	{
-		const auto str = type == str_repr_type_t::string;
+    size_t operator()(char ch, str_repr_type_t type)
+    {
+        const auto str = type == str_repr_type_t::string;
 
-		switch (ch) {
-		case '\\':
-			return print_out_quoted('\\');
-		case '\f':
-			return print_out_quoted('f');
-		case '\n':
-			return print_out_quoted('n');
-		case '\r':
-			return print_out_quoted('r');
-		case '\t':
-			return print_out_quoted('t');
-		case '\v':
-			return print_out_quoted('v');
-		case '"':
-			if (str)
-				return print_out_quoted('"');
-			else
-				return print_out(ch);
-		case '\'':
-			if (!str)
-				return print_out_quoted('\'');
-			else
-				return print_out(ch);
-		default:
-			if (isascii(ch) && !iscntrl(ch))
-				return print_out(ch);
-			else
-				return print_out_hex(ch, str);
-		}
-	}
+        switch (ch) {
+        case '\\':
+            return print_out_quoted('\\');
+        case '\f':
+            return print_out_quoted('f');
+        case '\n':
+            return print_out_quoted('n');
+        case '\r':
+            return print_out_quoted('r');
+        case '\t':
+            return print_out_quoted('t');
+        case '\v':
+            return print_out_quoted('v');
+        case '"':
+            if (str)
+                return print_out_quoted('"');
+            else
+                return print_out(ch);
+        case '\'':
+            if (!str)
+                return print_out_quoted('\'');
+            else
+                return print_out(ch);
+        default:
+            if (isascii(ch) && !iscntrl(ch))
+                return print_out(ch);
+            else
+                return print_out_hex(ch, str);
+        }
+    }
 
-	size_t operator()(char ch, char_repr_type_t type)
-	{
-		const auto q = type == char_repr_type_t::quoted;
-		size_t n = 0;
+    size_t operator()(char ch, char_repr_type_t type)
+    {
+        const auto q = type == char_repr_type_t::quoted;
+        size_t n = 0;
 
-		if (q)
-			n += print_out('\'');
+        if (q)
+            n += print_out('\'');
 
-		n += operator()(ch, q
-			? str_repr_type_t::plain
-			: str_repr_type_t::string);
+        n += operator()(ch, q
+            ? str_repr_type_t::plain
+            : str_repr_type_t::string);
 
-		if (q)
-			n += print_out('\'');
+        if (q)
+            n += print_out('\'');
 
-		return n;
-	}
+        return n;
+    }
 
 private:
-	size_t print_out(char ch)
-	{ ost << ch; return 1; }
+    size_t print_out(char ch)
+    { ost << ch; return 1; }
 
-	size_t print_out_quoted(char ch)
-	{ ost << '\\' << ch; return 2; }
+    size_t print_out_quoted(char ch)
+    { ost << '\\' << ch; return 2; }
 
-	size_t print_out_hex(char ch, bool str)
-	{
-		using namespace std;
-		auto f = ost.fill();
-		auto w = ost.width();
-		auto m = ost.flags();
-		auto c = static_cast<unsigned char>(ch); 
-		ost << "\\x"
-			<< hex
-			<< right
-			<< setfill('0')
-			<< setw(1 + str)
-			<< integer_cast<unsigned>(c)
-			<< setfill(f)
-			<< setw(w);
-		ost.flags(m);
-		return 3 + (str || c >= '\x10');
-	}
+    size_t print_out_hex(char ch, bool str)
+    {
+        using namespace std;
+        auto f = ost.fill();
+        auto w = ost.width();
+        auto m = ost.flags();
+        auto c = static_cast<unsigned char>(ch); 
+        ost << "\\x"
+            << hex
+            << right
+            << setfill('0')
+            << setw(1 + str)
+            << integer_cast<unsigned>(c)
+            << setfill(f)
+            << setw(w);
+        ost.flags(m);
+        return 3 + (str || c >= '\x10');
+    }
 
-	std::ostream& ost;
+    std::ostream& ost;
 };
 
 template<>
 struct ReprPrint<const char> : public ReprPrint<char>
 {
-	typedef ReprPrint<char> base_t;
+    typedef ReprPrint<char> base_t;
 
-	explicit ReprPrint(std::ostream& _ost) :
-		base_t(_ost)
-	{}
+    explicit ReprPrint(std::ostream& _ost) :
+        base_t(_ost)
+    {}
 };
 
 template<typename T>
 class ReprPrint<T*>
 {
 public:
-	explicit ReprPrint(std::ostream& _ost) :
-		ost(_ost)
-	{}
+    explicit ReprPrint(std::ostream& _ost) :
+        ost(_ost)
+    {}
 
-	void operator()(T* beg, T* end, bool str)
-	{
-		ReprPrint<T> repr(ost);
-		if (str)
-			ost << '"';
-		std::for_each(
-			beg, end, [&](char ch)
-				{ repr(ch, str
-					? str_repr_type_t::string
-					: str_repr_type_t::plain); });
-		if (str)
-			ost << '"';
-	}
+    void operator()(T* beg, T* end, bool str)
+    {
+        ReprPrint<T> repr(ost);
+        if (str)
+            ost << '"';
+        std::for_each(
+            beg, end, [&](char ch)
+                { repr(ch, str
+                    ? str_repr_type_t::string
+                    : str_repr_type_t::plain); });
+        if (str)
+            ost << '"';
+    }
 
 private:
-	std::ostream& ost;
+    std::ostream& ost;
 };
 
 template<typename T>
 class Repr
 {
 public:
-	explicit Repr(const T& _val) : val(_val) {}
+    explicit Repr(const T& _val) : val(_val) {}
 
-	void print(std::ostream& ost) const
-	{ ReprPrint<T>{ost}(val); }
+    void print(std::ostream& ost) const
+    { ReprPrint<T>{ost}(val); }
 
 private:
-	typedef
-		typename
-			std::conditional<
-				is_compound<T>(),
-				const T&,
-				T
-			>::type
-		val_t;
+    typedef
+        typename
+            std::conditional<
+                is_compound<T>(),
+                const T&,
+                T
+            >::type
+        val_t;
 
-	val_t val;
+    val_t val;
 };
 
 template<>
 class Repr<char>
 {
 public:
-	Repr(char _ch, char_repr_type_t _type) :
-		ch(_ch), type(_type)
-	{}
+    Repr(char _ch, char_repr_type_t _type) :
+        ch(_ch), type(_type)
+    {}
 
-	void print(std::ostream& ost) const
-	{ ReprPrint<char>{ost}(ch, type); }
+    void print(std::ostream& ost) const
+    { ReprPrint<char>{ost}(ch, type); }
 
 private:
-	char             ch;
-	char_repr_type_t type;
+    char             ch;
+    char_repr_type_t type;
 };
 
 template<typename T>
 class Repr<T*>
 {
 public:
-	Repr(const T* _beg, const T* _end, bool _str) :
-		beg(_beg), end(_end), str(_str)
-	{}
+    Repr(const T* _beg, const T* _end, bool _str) :
+        beg(_beg), end(_end), str(_str)
+    {}
 
-	Repr(const T* _beg, size_t _size, bool _str) :
-		beg(_beg), end(_beg + _size), str(_str)
-	{}
+    Repr(const T* _beg, size_t _size, bool _str) :
+        beg(_beg), end(_beg + _size), str(_str)
+    {}
 
-	void print(std::ostream& ost) const
-	{ ReprPrint<const T*>{ost}(beg, end, str); }
+    void print(std::ostream& ost) const
+    { ReprPrint<const T*>{ost}(beg, end, str); }
 
 private:
-	const T *beg;
-	const T *end;
-	bool     str;
+    const T *beg;
+    const T *end;
+    bool     str;
 };
 
 template<typename T>
 inline typename std::enable_if<
-	!is_char_pointer<T>(),
+    !is_char_pointer<T>(),
 Repr<T>>::type
 repr(const T& val)
 { return Repr<T>{val}; }
@@ -1090,7 +1090,7 @@ inline Repr<T*> repr(T* ptr, size_t size, bool str = false)
 
 inline Repr<char> repr(char ch, bool quote = false)
 { return Repr<char>{
-	ch, quote ? char_repr_type_t::quoted : char_repr_type_t::plain}; }
+    ch, quote ? char_repr_type_t::quoted : char_repr_type_t::plain}; }
 
 inline Repr<const char*> repr(const char* ptr, bool str = false)
 { return Repr<const char*>{ptr, ptr ? strlen(ptr) : 0, str}; }
