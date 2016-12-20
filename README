@@ -131,7 +131,7 @@ NAME is the name of the test case and RESULT is either 'OK' or 'failed'. The
 expected behaviour would be that of all test cases to succeed. In the case of
 things going the wrong way for a particular test case, more verbose output is
 obtainable when running the corresponding 'test-*.sh' shell script on its own.
-It will produce a diff between expected and actual output of 'trie'.
+It will produce a diff between expected and actual output of 'tree'.
 
 Note that any user's explicit invocation of these bash test scripts must be
 initiated from within the 'test' directory.
