@@ -160,11 +160,15 @@ void* PoolAllocator::allocate(size_t nbytes, size_t align)
         nbytes =  1;
     if (nptrs >= nobjs)
         throw BadAlloc(this, "nobjs");
-    auto r = ptr;
-    auto a = Ext::ptr_to_int(r) % align;
-    if (a) r += align - a;
-    if (r + nbytes > pool + pool_sz)
+    align -= Ext::ptr_to_int(ptr) % align;
+    if (Ext::max<size_t>() - align < nbytes ||
+        nbytes + align > pool_sz ||
+        Ext::integer_cast<size_t>(ptr - pool) >
+        pool_sz - (nbytes + align))
         throw BadAlloc(this, "pool_sz");
+    // => ptr + nbytes + align <= pool + pool_sz
+    // => ptr + align <= pool + pool_sz
+    auto r = ptr + align;
     if (constr)
         constr(r, nptrs);
     ptr = r + nbytes;
