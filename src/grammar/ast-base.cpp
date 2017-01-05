@@ -99,7 +99,8 @@ bool PoolAllocator::find(const void* what) const
     }
     else {
         auto rng = equal_range(
-            ptrs, ptrs + nptrs, what, less<const void*>());
+            ptrs, ptrs + nptrs, what, [](const void* p, const void* q)
+                { return Ext::ptr_to_int(p) < Ext::ptr_to_int(q); });
         SYS_ASSERT(
             rng.second == rng.first ||
             rng.second == rng.first + 1);
@@ -121,7 +122,8 @@ bool PoolAllocator::find(const void* what, size_t& index) const
     }
     else {
         auto rng = equal_range(
-            ptrs, ptrs + nptrs, what, less<const void*>());
+            ptrs, ptrs + nptrs, what, [](const void* p, const void* q)
+                { return Ext::ptr_to_int(p) < Ext::ptr_to_int(q); });
         SYS_ASSERT(
             rng.second == rng.first ||
             rng.second == rng.first + 1);
