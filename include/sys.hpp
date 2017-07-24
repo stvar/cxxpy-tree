@@ -251,14 +251,14 @@ public:
     };
 
     inline iterator begin() const
-    { return iterator(base_t::get(), ptr); }
+    { return iterator(get(), ptr); }
 
     inline iterator end() const
     { return iterator(ptr, ptr); }
 #endif // DEBUG
 
     const char* nassign(const char *key, size_t sz)
-    { ptr = base_t::get(); return nadd(key, sz); }
+    { ptr = get(); return nadd(key, sz); }
 
     const char* nadd(const char *key, size_t sz);
 
@@ -269,8 +269,7 @@ public:
     { return nadd(key, strlen(key)); }
 
 protected:
-    const char* get() const
-    { return base_t::get(); }
+    using base_t::get;
 
 private:
     size_t incr;

@@ -42,7 +42,7 @@ namespace Sys {
 
 void buf_t::realloc(size_t n)
 {
-    auto p = base_t::get();
+    auto p = get();
     SYS_ASSERT(ptr >= p);
     size_t s = ptr - p;
     auto r = base_t::realloc(size + n);
@@ -55,9 +55,9 @@ void buf_t::realloc(size_t n)
 const char* buf_t::nadd(const char *key, size_t sz)
 {
     auto s = 1 + sz;
-    if (ptr + s > base_t::get() + size)
+    if (ptr + s > get() + size)
         realloc(incr > s ? incr : s);
-    SYS_ASSERT(ptr + s <= base_t::get() + size);
+    SYS_ASSERT(ptr + s <= get() + size);
     auto r = ptr;
     memcpy(r, key, sz);
     r[sz] = 0;
