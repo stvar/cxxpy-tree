@@ -190,7 +190,7 @@ static inline bool is_plain_char(char ch)
 inline const char* Parser::scan_literal(const char* ptr)
 {
     const auto pos = [this, ptr](const char* p)
-        { SYS_ASSERT(p >= ptr); return this->pos + (p - ptr); };
+        { return this->pos + Ext::ptr_diff(p, ptr); };
 
     const char ch = *ptr ++;
     while (ptr < input_end) {

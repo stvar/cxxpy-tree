@@ -1173,8 +1173,7 @@ const typename BasicMaker<M, T>::new_funcs_t* BasicMaker<M, T>::find(
         rng.second == rng.first + 1);
     if (rng.second == rng.first)
         error("unknown AST type name '%s'", name);
-    SYS_ASSERT(rng.first >= beg);
-    size_t k = rng.first - beg;
+    size_t k = Ext::ptr_diff(rng.first, beg);
     SYS_ASSERT(k < self_t::n_new_func);
     cache = &self_t::new_funcs[k];
     return cache;

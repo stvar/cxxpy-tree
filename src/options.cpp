@@ -276,7 +276,7 @@ void options_t::parse(size_t argc, char* const argv[])
     auto ptr = std::find_if(argv, end,
         [](const char* p) { return strcmp(p, "--") == 0; });
     if (ptr != end) {
-        ext_argc = end - ptr;
+        ext_argc = Ext::ptr_diff(end, ptr);
         ext_argv = ptr;
         argc -= ext_argc;
     }

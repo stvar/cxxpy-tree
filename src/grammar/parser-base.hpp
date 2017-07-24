@@ -70,7 +70,7 @@ protected:
         { SYS_ASSERT(beg <= end); }
 
         size_t size() const
-        { SYS_ASSERT(beg <= end); return end - beg; }
+        { return Ext::ptr_diff(end, beg); }
 
         const char *beg;
         const char *end;
@@ -105,7 +105,7 @@ protected:
                 line ++;
             }
             if (last)
-                col = rng.end - last;
+                col = Ext::ptr_diff(rng.end, last);
             else
                 col += rng.size();
 

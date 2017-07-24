@@ -117,8 +117,7 @@ bool PoolAllocator::find(const void* what, size_t& index) const
             { return p == what; });
         if (ptr == end)
             return false;
-        SYS_ASSERT(ptr >= ptrs);
-        index = ptr - ptrs;
+        index = Ext::ptr_diff(ptr, ptrs);
     }
     else {
         auto rng = equal_range(
@@ -129,8 +128,7 @@ bool PoolAllocator::find(const void* what, size_t& index) const
             rng.second == rng.first + 1);
         if (rng.second == rng.first)
             return false;
-        SYS_ASSERT(rng.first >= ptrs);
-        index = rng.first - ptrs;
+        index = Ext::ptr_diff(rng.first, ptrs);
     }
     return true;
 }
@@ -165,7 +163,7 @@ void* PoolAllocator::allocate(size_t nbytes, size_t align)
     align -= Ext::ptr_to_int(ptr) % align;
     if (Ext::max<size_t>() - align < nbytes ||
         nbytes + align > pool_sz ||
-        Ext::integer_cast<size_t>(ptr - pool) >
+        Ext::ptr_diff(ptr, pool) >
         pool_sz - (nbytes + align))
         throw BadAlloc(this, "pool_sz");
     // => ptr + nbytes + align <= pool + pool_sz

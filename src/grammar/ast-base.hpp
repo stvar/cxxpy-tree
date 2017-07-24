@@ -175,8 +175,7 @@ struct base_enum_t
             [=](const char* p) { return strcmp(p, name) == 0; });
         if (ptr == end)
             return false;
-        SYS_ASSERT(ptr >= beg);
-        type = ptr - beg;
+        type = Ext::ptr_diff(ptr, beg);
         SYS_ASSERT(type < size);
         return true;
     }

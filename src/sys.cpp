@@ -42,10 +42,8 @@ namespace Sys {
 
 void buf_t::enlarge(size_t n)
 {
-    auto p = get();
-    SYS_ASSERT(ptr >= p);
-    size_t s = ptr - p;
-    auto r = base_t::realloc(size + n);
+    auto s = Ext::ptr_diff(ptr, get());
+    auto r = realloc(size + n);
     if (r == nullptr)
         OUT_OF_MEMORY();
     size += n;
