@@ -51,7 +51,7 @@ static inline bool parse_num_cstdlib(
         errno = EINVAL;
         return false;
     }
-    end = 0;
+    end = nullptr;
     errno = 0;
     T val = F(
         str,

@@ -160,7 +160,7 @@ template<typename R, typename V>
 const R* NodeMaker::new_list(size_t n_arg, obj_stack_t& args)
 {
     if (n_arg == 0)
-        return 0;
+        return nullptr;
     auto ptr = ast->new_list<R>(n_arg);
     auto end = ptr + n_arg;
     for (size_t k = n_arg - 1; ptr != end; ++ ptr, -- k)
