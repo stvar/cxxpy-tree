@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2016  Stefan Vargyas
+# Copyright (C) 2016, 2017  Stefan Vargyas
 # 
 # This file is part of C++Py-Tree.
 # 
