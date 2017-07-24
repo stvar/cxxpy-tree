@@ -360,7 +360,7 @@ void Parser::verror(const pos_t& pos, const char* msg, va_list args)
     using namespace std;
 
     const auto fmt = [this, &pos](const string& str)
-        { return Sys::format("%s:%d:%d: %s",
+        { return Sys::format("%s:%zu:%zu: %s",
             input_name, pos.line, pos.col, str.c_str()); };
 
     const auto what = fmt(Sys::vformat(msg, args));

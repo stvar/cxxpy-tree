@@ -82,7 +82,7 @@ protected:
             pos_t(1, 1)
         {}
 
-        pos_t(unsigned _line, unsigned _col) :
+        pos_t(size_t _line, size_t _col) :
             line(_line), col(_col)
         {}
 
@@ -121,8 +121,8 @@ protected:
         void print(std::ostream& ost) const
         { ost << "pos(" << line << ',' << col << ')'; }
 
-        unsigned line;
-        unsigned col;
+        size_t line;
+        size_t col;
     };
 
     friend std::ostream& operator<<(std::ostream& ost, const pos_t& pos)
