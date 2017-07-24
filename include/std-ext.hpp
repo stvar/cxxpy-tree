@@ -381,6 +381,10 @@ bool>::type
 }
 
 template<typename T>
+inline size_t ptr_diff(const T* p, const T* q)
+{ return integer_cast<size_t>(p - q); }
+
+template<typename T>
 inline uintptr_t ptr_to_int(const T* v)
 {
     CXX_ASSERT(
