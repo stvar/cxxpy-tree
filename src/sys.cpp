@@ -55,9 +55,12 @@ void buf_t::enlarge(size_t n)
 const char* buf_t::nadd(const char *key, size_t sz)
 {
     auto s = 1 + sz;
-    if (ptr + s > get() + size)
+    auto d = Ext::ptr_diff(ptr, get());
+    if (d + s > size) {
         enlarge(incr > s ? incr : s);
-    SYS_ASSERT(ptr + s <= get() + size);
+        d = Ext::ptr_diff(ptr, get());
+        SYS_ASSERT(d + s <= size);
+    }
     auto r = ptr;
     memcpy(r, key, sz);
     r[sz] = 0;
