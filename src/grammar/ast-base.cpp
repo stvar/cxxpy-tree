@@ -151,8 +151,8 @@ PoolAllocator::~PoolAllocator()
 #endif
     if (destr == nullptr)
         return;
-    for (auto p = ptrs + nptrs - 1; p >= ptrs; p --)
-        destr(*p);
+    for (auto p = ptrs + nptrs; p > ptrs; )
+        destr(*-- p);
 }
 
 void* PoolAllocator::allocate(size_t nbytes, size_t align)
