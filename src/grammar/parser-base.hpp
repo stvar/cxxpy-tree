@@ -32,7 +32,7 @@ typedef unsigned token_type_t;
 
 template<token_type_t t>
 constexpr token_type_t token()
-{ CXX_ASSERT(t < Ext::digits<token_type_t>()); return 1 << t; }
+{ CXX_ASSERT(t < Ext::digits<token_type_t>()); return 1U << t; }
 
 class BaseParser
 {
