@@ -351,10 +351,12 @@ file_t::buf_t file_t::read_stdin()
     static const ssize_t inc = 4096;
     char chunk[1024];
     size_t size = 0;
+    size_t d = 0;
     buf_t buf;
-    char *p = nullptr;
     while (1) {
+        SYS_ASSERT(d <= size);
         auto n = ::read(desc, chunk, sizeof chunk);
+        // => d + n <= size + n
         if (n < 0)
             sys_error("failed reading input");
         if (n == 0)
@@ -362,19 +364,17 @@ file_t::buf_t file_t::read_stdin()
         if (buf.size() + n >= max_size)
             error("input is too large");
         auto q = buf.get();
-        SYS_ASSERT(p >= q);
-        if (p + n > q + size) {
-            size_t s = p - q;
+        if (d + n > size) {
             size += n < inc ? inc : n;
-            auto r = buf.realloc(size);
-            if (r == nullptr)
+            // => d + n <= size
+            q = buf.realloc(size);
+            if (q == nullptr)
                 OUT_OF_MEMORY();
-            p = r + s;
         }
-        SYS_ASSERT(p + n <= buf.get() + size);
-        memcpy(p, chunk, n);
-        p += n;
+        memcpy(q + d, chunk, n);
+        d += n;
     }
+    auto p = buf.get() + d;
     auto b = buf.end(p);
     SYS_ASSERT(b);
     // stev: ISO/IEC 14882:2011 12.8.32:
