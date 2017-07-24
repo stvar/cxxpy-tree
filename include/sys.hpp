@@ -213,7 +213,7 @@ public:
         size(0),
         ptr(nullptr)
     {
-        realloc(incr);
+        enlarge(incr);
     }
 
 #ifdef DEBUG
@@ -276,7 +276,7 @@ private:
     size_t size;
     char  *ptr;
 
-    void realloc(size_t n);
+    void enlarge(size_t n);
 };
 
 #ifdef SYS_OPTS
