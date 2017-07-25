@@ -95,7 +95,7 @@ bool PoolAllocator::find(const void* what) const
     if (is_linear_find(nptrs)) {
         auto end = ptrs + nptrs;
         return find_if(ptrs, end, [=](const void* p)
-            { return p == what; }) != end;
+            { return Ext::ptr_to_int(p) == Ext::ptr_to_int(what); }) != end;
     }
     else {
         auto rng = equal_range(
@@ -114,7 +114,7 @@ bool PoolAllocator::find(const void* what, size_t& index) const
     if (is_linear_find(nptrs)) {
         auto end = ptrs + nptrs;
         auto ptr = find_if(ptrs, end, [=](const void* p)
-            { return p == what; });
+            { return Ext::ptr_to_int(p) == Ext::ptr_to_int(what); });
         if (ptr == end)
             return false;
         index = Ext::ptr_diff(ptr, ptrs);
