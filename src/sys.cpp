@@ -361,15 +361,13 @@ file_t::buf_t file_t::read_stdin()
             break;
         if (buf.size() + n >= max_size)
             error("input is too large");
-        auto q = buf.get();
         if (d + n > size) {
             size += n < inc ? inc : n;
             // => d + n <= size
-            q = buf.realloc(size);
-            if (q == nullptr)
+            if (buf.realloc(size) == nullptr)
                 OUT_OF_MEMORY();
         }
-        memcpy(q + d, chunk, n);
+        memcpy(buf.get() + d, chunk, n);
         d += n;
     }
     auto p = buf.get() + d;
