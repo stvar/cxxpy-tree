@@ -196,17 +196,13 @@ public:
     virtual result_t accept(Visitor0*) const;
     virtual void accept(Visitor*) const;
 
-    unsigned short id() const { return n; };
-
     unsigned short tag() const { return t; };
     void tag(unsigned short _t) const { t = _t; };
 
 private:
     friend class BaseAST<Node>;
 
-    unsigned short n;
-    mutable
-    unsigned short t;
+    mutable unsigned short t;
 };
 
 class Literal : public Node
