@@ -81,8 +81,8 @@
 //       defined ptr_extend pattern. Do not rely on sign extension.
 //
 // Note that I only looked into the GCC documentation of versions
-// between v4.0.0 and v4.9.0.
-#if GCC_VERSION < 40000 || GCC_VERSION > 40900
+// between v4.0.0 and v11.1.0.
+#if GCC_VERSION < 40000 || GCC_VERSION >= 120000
 #define CONFIG_PTR_TO_INT_IDENTOP 0
 #define CONFIG_INT_TO_PTR_IDENTOP 0
 #else
@@ -101,14 +101,14 @@
 // (or function). Note that the C standard (C99 7.15.1) says that
 // each call to 'va_start' shall be paired by a call to 'va_end'.
 
-// stev: the implementation of GCC v4.x (0 <= x <= 9) boils down
+// stev: the implementation of GCC v4.* through v11.* boils down
 // the 'va_end' macro to a built-in function '__builtin_va_end'.
 // This function is indeed a trivial no-operation (look into the
 // source code gcc/builtins.{def,c}). Other versions of GCC might
 // well implement the same behaviour -- but, since this issue is
 // a tricky one, CONFIG_VA_END_NOOP should only be set to 'true'
 // following a positive assurance about the things implied.
-#if GCC_VERSION < 40000 || GCC_VERSION > 40900
+#if GCC_VERSION < 40000 || GCC_VERSION >= 120000
 #define CONFIG_VA_END_NOOP 0
 #else
 #define CONFIG_VA_END_NOOP 1
