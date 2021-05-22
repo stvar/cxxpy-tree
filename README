@@ -50,7 +50,9 @@ subsumed or just related to the father C++Py project.
 As expected, the C++Py-Tree program is written in modern C++ and was developed
 over the time under a few GNU/Linux environments using GCC C++ compilers [1] --
 versions 4.1.2, 4.3.4 and an experimental 4.8.0 built from sources -- and a few
-common GNU/Linux power-tools.
+common GNU/Linux power-tools. The newest GCC version with which C++Py-Tree was
+tested is 8.2.1 (passing to GCC the option `-std=gnu++11', it builds C++Py-Tree
+cleanly).
 
 While writing C++ code, I regularly pay a good deal of attention making as
 explicit as possible each of the low-level choices assumed. To that effect
