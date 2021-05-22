@@ -272,13 +272,24 @@ void options_t::parse(size_t argc, char* const argv[])
 
     home_dir = argc > 0 && argv[0] ? dirname(argv[0]) : nullptr;
 
-    auto end = argv + argc;
-    auto ptr = std::find_if(argv, end,
-        [](const char* p) { return strcmp(p, "--") == 0; });
-    if (ptr != end) {
-        ext_argc = Ext::ptr_diff(end, ptr);
-        ext_argv = ptr;
-        argc -= ext_argc;
+    // stev: when given no options
+    // (thus when 'argv == nullptr')
+    // skip over the getopt_long loop
+    if (argc == 0) goto parse_done;
+
+    // stev: prevent the compiler erring
+    // about the goto above crossing the
+    // initializations of 'end' and 'ptr'
+    // below by having an inner block
+    {
+        auto end = argv + argc;
+        auto ptr = std::find_if(argv, end,
+            [](const char* p) { return strcmp(p, "--") == 0; });
+        if (ptr != end) {
+            ext_argc = Ext::ptr_diff(end, ptr);
+            ext_argv = ptr;
+            argc -= ext_argc;
+        }
     }
 
     opt_t opt;
@@ -345,6 +356,7 @@ void options_t::parse(size_t argc, char* const argv[])
     argv += optind;
     argc -= optind;
 
+parse_done:
     this->argc = argc;
     this->argv = argv;
 
