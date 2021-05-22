@@ -78,5 +78,5 @@ else
     echo "$f"
 fi
 
-exit $(( r != 0 ))
+exit $(( f != 0 ))
 
