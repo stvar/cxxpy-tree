@@ -112,14 +112,14 @@ public:
     };
 
     template<typename T>
-    void* allocate() throw (BadAlloc)
+    void* allocate()
     { return allocate(sizeof(T), alignof(T)); }
 
     template<typename T>
-    void* allocate(size_t n) throw (BadAlloc)
+    void* allocate(size_t n)
     { return allocate(sizeof(T) * n, alignof(T[0])); }
 
-    void rollback(void* obj) throw (BadRollback);
+    void rollback(void* obj);
     bool find(const void* what) const;
     bool find(const void* what, size_t&) const;
     size_t size() const { return nptrs; }
@@ -135,7 +135,7 @@ protected:
     void** base() const { return ptrs; }
 
 private:
-    void* allocate(size_t nbytes, size_t align) throw (BadAlloc);
+    void* allocate(size_t nbytes, size_t align);
 
 #ifdef DEBUG
     bool        debug;

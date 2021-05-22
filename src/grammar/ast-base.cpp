@@ -154,7 +154,6 @@ PoolAllocator::~PoolAllocator()
 }
 
 void* PoolAllocator::allocate(size_t nbytes, size_t align)
-    throw (BadAlloc)
 {
     if (nbytes == 0)
         nbytes =  1;
@@ -183,7 +182,6 @@ void* PoolAllocator::allocate(size_t nbytes, size_t align)
 }
 
 void PoolAllocator::rollback(void* obj)
-    throw (BadRollback)
 {
     if (nptrs < 1 || ptrs[nptrs - 1] != obj)
         throw BadRollback(this, obj);
