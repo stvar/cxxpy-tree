@@ -71,7 +71,7 @@ struct named_ptr
             << '~';
         ost
             << name << "(0x" << right << hex << setfill('0')
-            << setw(UINTPTR_WIDTH)
+            << setw(UINTPTR_FMT_WIDTH)
             << Ext::ptr_to_int(ptr)
             << setw(w) << setfill(c) << ')' << endl;
         ost.flags(f);

@@ -1333,7 +1333,7 @@ struct print_t<const T*>
             auto c = ost.fill();
             auto f = ost.flags();
             ost << "Ptr('0x" << right << hex << setfill('0')
-                << setw(UINTPTR_WIDTH)
+                << setw(UINTPTR_FMT_WIDTH)
                 << Ext::ptr_to_int(obj)
                 << setw(w) << setfill(c) << "')";
             ost.flags(f);

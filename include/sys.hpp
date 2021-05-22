@@ -56,15 +56,15 @@
 
 // stev: below assume 8 bits per byte 
 #if __WORDSIZE == 32
-# define UINTPTR_WIDTH 8
+# define UINTPTR_FMT_WIDTH 8
 #elif __WORDSIZE == 64
-# define UINTPTR_WIDTH 16
+# define UINTPTR_FMT_WIDTH 16
 #else
 # error expected __WORDSIZE to be 32 or 64
 #endif
 
 #define UINTPTR_FORMAT \
-    "0x%0" STRINGIFY(UINTPTR_WIDTH) PRIxPTR
+    "0x%0" STRINGIFY(UINTPTR_FMT_WIDTH) PRIxPTR
 
 #define EXT_FUNC_ENTRY extern "C"
 
