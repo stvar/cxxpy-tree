@@ -60,9 +60,11 @@ const char* buf_t::nadd(const char *key, size_t sz)
         SYS_ASSERT(d + s <= size);
     }
     auto r = ptr;
-    memcpy(r, key, sz);
+    if (sz)
+        memcpy(r, key, sz);
     r[sz] = 0;
-    SYS_ASSERT(strncmp(r, key, sz) == 0);
+    if (sz)
+        SYS_ASSERT(strncmp(r, key, sz) == 0);
     ptr += s;
     return r;
 }
