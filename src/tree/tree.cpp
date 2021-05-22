@@ -1,4 +1,4 @@
-// Copyright (C) 2016, 2017  Stefan Vargyas
+// Copyright (C) 2016, 2017, 2021  Stefan Vargyas
 // 
 // This file is part of C++Py-Tree.
 // 
@@ -34,7 +34,7 @@ const char program[] = "tree";
 const char verdate[] = "0.2 -- 2014-11-16 16:15"; // $ date +'%F %R'
 
 const char license[] =
-"Copyright (C) 2016, 2017  Stefan Vargyas.\n"
+"Copyright (C) 2016, 2017, 2021  Stefan Vargyas.\n"
 "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
 "This is free software: you are free to change and redistribute it.\n"
 "There is NO WARRANTY, to the extent permitted by law.\n";

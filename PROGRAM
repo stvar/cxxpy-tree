@@ -1,5 +1,5 @@
 C++Py-Tree: Extendable Interpreter for Type-Constrained AST Expressions.
-Copyright (C) 2016, 2017  Stefan Vargyas
+Copyright (C) 2016, 2017, 2021  Stefan Vargyas
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
