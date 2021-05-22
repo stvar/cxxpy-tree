@@ -56,7 +56,6 @@ AST::AST(
 #endif
         8192, 131072, //!!! 4096, 65536,
         4096, 65536,
-        base_t::node_constr,
         base_t::node_destr)
 {}
 

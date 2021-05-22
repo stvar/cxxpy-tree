@@ -57,7 +57,6 @@ AST::AST(
 #endif
         256, 16384,
         256, 16384,
-        base_t::node_constr,
         base_t::node_destr)
 {}
 

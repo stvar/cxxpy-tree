@@ -77,7 +77,6 @@ AST::AST(
         _debug,
 #endif
         POOL_SIZE,
-        base_t::node_constr,
         base_t::node_destr),
     n_treenodes(0)
 {}

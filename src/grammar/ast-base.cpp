@@ -31,14 +31,12 @@ PoolAllocator::PoolAllocator(
 #endif
     size_t _nobjs,
     size_t _pool_sz,
-    constr_t _constr,
     destr_t _destr)
     noexcept :
 #ifdef DEBUG
     debug(_debug),
 #endif
     name(_name),
-    constr(_constr),
     destr(_destr),
     nobjs(_nobjs),
     pool_sz(_pool_sz),
@@ -168,8 +166,6 @@ void* PoolAllocator::allocate(size_t nbytes, size_t align)
     // => ptr + nbytes + align <= pool + pool_sz
     // => ptr + align <= pool + pool_sz
     auto r = ptr + align;
-    if (constr)
-        constr(r, nptrs);
     ptr = r + nbytes;
     ptrs[nptrs ++] = r;
 #ifdef DEBUG

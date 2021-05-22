@@ -37,7 +37,6 @@ namespace AST {
 class PoolAllocator : private Sys::mem_t
 {
 public:
-    typedef void (*constr_t)(void*, unsigned short);
     typedef void (*destr_t)(void*);
 
     class iterator : public std::iterator<std::input_iterator_tag, void*>
@@ -76,7 +75,6 @@ public:
         const char* _name,
         size_t _nobjs,
         size_t _pool_sz,
-        constr_t _constr = nullptr,
         destr_t _destr = nullptr) noexcept;
     ~PoolAllocator() noexcept;
 
@@ -141,7 +139,6 @@ private:
     bool        debug;
 #endif
     const char *name;
-    constr_t    constr;
     destr_t     destr;
     size_t      nobjs;
     size_t      pool_sz;
@@ -199,7 +196,6 @@ protected:
 #endif
         size_t _node_nobjs, size_t _node_pool_sz,
         size_t _raw_nobjs, size_t _raw_pool_sz,
-        PoolAllocator::constr_t _node_constr,
         PoolAllocator::destr_t _node_destr
     ) :
         node_alloc(
@@ -209,7 +205,6 @@ protected:
             "node",
             _node_nobjs,
             _node_pool_sz,
-            _node_constr,
             _node_destr),
         raw_alloc(
 #ifdef DEBUG
@@ -225,9 +220,6 @@ protected:
     {}
 
     size_t num_node() const { return node_alloc.size(); }
-
-    static void node_constr(void *ptr, unsigned short id) noexcept
-    { static_cast<root_t*>(ptr)->n = id + 1; }
 
     static void node_destr(void *ptr) noexcept
     { static_cast<root_t*>(ptr)->~root_t(); }
