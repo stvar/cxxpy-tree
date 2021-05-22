@@ -31,7 +31,7 @@
 #include "demangle.hpp"
 
 const char program[] = "tree";
-const char verdate[] = "0.2 -- 2014-11-16 16:15"; // $ date +'%F %R'
+const char verdate[] = "0.3 -- 2021-05-22 14:14"; // $ date +'%F %R'
 
 const char license[] =
 "Copyright (C) 2016, 2017, 2021  Stefan Vargyas.\n"
