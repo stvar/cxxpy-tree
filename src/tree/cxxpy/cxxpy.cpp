@@ -63,7 +63,7 @@ template<>
 AST::AST::comp_op_t::type_t cptr_def_t<AST::AST::comp_op_t::type_t>::cast(
     const char* arg)
 {
-    size_t type;
+    size_t type = 0;
     if (!AST::AST::comp_op_t::lookup(arg, type))
         invalid_value(arg);
     return Ext::enum_cast<AST::AST::comp_op_t::type_t>(type);
